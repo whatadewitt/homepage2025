@@ -1,0 +1,127 @@
+---
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+import AnimatedSVG from "../components/AnimatedSVG.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon-32x32.png" type="image/png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Initialize theme before page renders -->
+    <script is:inline>
+      if (
+        localStorage.getItem("color-theme") === "dark" ||
+        (!("color-theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
+  </head>
+  <body class="min-h-screen">
+    <div class="flex justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+      <div class="w-full max-w-6xl mx-auto relative">
+        <!-- Controls Wrapper -->
+        <div class="top-4 flex gap-2 z-10 fixed right-4">
+          <slot name="controls" />
+          <ThemeToggle />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+          <div
+            class="p-4 sm:p-12 flex justify-center lg:sticky lg:top-12 lg:h-fit"
+          >
+            <AnimatedSVG />
+          </div>
+
+          <div class="p-4 sm:p-12 flex flex-col justify-center">
+            <h1
+              class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-800 dark:text-white tracking-tight"
+            >
+              Luke DeWitt
+            </h1>
+            <slot />
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <style is:global>
+    /* CSS Variables for theming and fonts */
+    :root {
+      /* Light Theme Colors */
+      --bg-color: #f5f3ff; /* Violet 50 */
+      --text-color: #1c1917;
+      --primary-color: #7c3aed; /* Violet 600 */
+      --secondary-color: #5b21b6; /* Violet 800 */
+      --container-bg: rgba(255, 255, 255, 0.5);
+      --svg-bg: rgba(124, 58, 237, 0.05);
+      --link-bg: rgba(0, 0, 0, 0.05);
+      --link-hover-bg: rgba(124, 58, 237, 0.1);
+      --shadow-color: rgba(124, 58, 237, 0.1);
+      --svg-stroke-1: #6d28d9; /* Violet 700 */
+      --svg-stroke-2: #7c3aed; /* Violet 600 */
+      --svg-stroke-3: #8b5cf6; /* Violet 500 */
+      --toast-bg: rgba(28, 25, 23, 0.8);
+      --toast-text: #f8f5f2;
+
+      /* Font Family */
+      --font-mono-jetbrains: "JetBrains Mono", monospace;
+    }
+
+    html.dark {
+      /* Dark Theme Colors */
+      --bg-color: #111111; /* Black */
+      --text-color: #e0e7ff; /* Indigo 200 */
+      --primary-color: #8b5cf6; /* Violet 500 */
+      --secondary-color: #a78bfa; /* Violet 400 */
+      --container-bg: rgba(25, 25, 25, 0.5); /* Dark Grey */
+      --svg-bg: rgba(139, 92, 246, 0.05);
+      --link-bg: rgba(255, 255, 255, 0.05);
+      --link-hover-bg: rgba(139, 92, 246, 0.15);
+      --shadow-color: rgba(139, 92, 246, 0.1);
+      --svg-stroke-1: #a78bfa; /* Violet 400 */
+      --svg-stroke-2: #8b5cf6; /* Violet 500 */
+      --svg-stroke-3: #7c3aed; /* Violet 600 */
+      --toast-bg: rgba(224, 231, 255, 0.8);
+      --toast-text: #010101;
+    }
+
+    body {
+      font-family: var(--font-mono-jetbrains); /* JetBrains Mono as default */
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+    }
+  </style>
+</html>

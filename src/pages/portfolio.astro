@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PortfolioItem from "../components/PortfolioItem.astro";
+import HomeButton from "../components/HomeButton.astro";
+import { portfolioItems } from "../content/portfolio/items";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import AnimatedSVG from "../components/AnimatedSVG.astro";
+
+const sortedItems = portfolioItems.sort(
+  (a, b) => (a.order || 0) - (b.order || 0)
+);
+---
+
+<Layout title="Luke DeWitt | Portfolio">
+  <HomeButton slot="controls" />
+
+  <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
+    This is less of a portfolio and more a selection of a few things I am proud
+    to share.
+  </p>
+
+  <div class="grid grid-cols-1 gap-8 mt-6">
+    {sortedItems.map((item) => <PortfolioItem item={item} />)}
+  </div>
+</Layout>

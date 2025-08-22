@@ -1,0 +1,44 @@
+---
+export interface Props {
+  github?: string;
+  linkedin?: string;
+  portfolio?: string;
+}
+
+const {
+  github = "https://www.github.com/whatadewitt",
+  linkedin = "https://www.linkedin.com/in/lukedewitt/",
+  portfolio = "/portfolio",
+} = Astro.props;
+---
+
+<div class="mt-8">
+  <h3 class="text-lg font-bold text-stone-800 dark:text-white mb-4">
+    Find me on the web
+  </h3>
+  <div class="flex flex-wrap gap-4">
+    <a
+      href={github}
+      target="_blank"
+      class="social-link flex items-center gap-3 bg-stone-200/50 dark:bg-gray-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/50 transition-all duration-300 px-4 py-2 rounded-lg text-stone-700 dark:text-white"
+    >
+      <i class="fab fa-github fa-lg"></i>
+      <span>GitHub</span>
+    </a>
+    <a
+      href={linkedin}
+      target="_blank"
+      class="social-link flex items-center gap-3 bg-stone-200/50 dark:bg-gray-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/50 transition-all duration-300 px-4 py-2 rounded-lg text-stone-700 dark:text-white"
+    >
+      <i class="fab fa-linkedin-in fa-lg"></i>
+      <span>LinkedIn</span>
+    </a>
+    <!-- <a 
+      href={portfolio} 
+      class="social-link flex items-center gap-3 bg-stone-200/50 dark:bg-gray-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/50 transition-all duration-300 px-4 py-2 rounded-lg text-stone-700 dark:text-white"
+    >
+      <i class="fas fa-globe fa-lg"></i>
+      <span>Portfolio</span>
+    </a> -->
+  </div>
+</div>

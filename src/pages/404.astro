@@ -1,0 +1,30 @@
+---
+import Layout from "../layouts/Layout.astro";
+import HomeButton from "../components/HomeButton.astro";
+---
+
+<Layout title="Luke DeWitt | 404">
+  <HomeButton slot="controls" />
+
+  <h2
+    class="mt-2 text-xl sm:text-2xl font-medium text-violet-600 dark:text-violet-400"
+  >
+    Oops!
+  </h2>
+
+  <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
+    Not sure how or why you got here, but it ain't right!
+  </p>
+
+  <div class="mt-8">
+    <div class="flex flex-wrap gap-4">
+      <a
+        href="/"
+        class="flex items-center gap-3 bg-stone-200/50 dark:bg-gray-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/50 transition-all duration-300 px-4 py-2 rounded-lg text-stone-700 dark:text-white"
+      >
+        <i class="fa-solid fa-home mr-2"></i>
+        <span>Home</span>
+      </a>
+    </div>
+  </div>
+</Layout>

@@ -1,16 +1,21 @@
 ---
-
+import Layout from "../layouts/Layout.astro";
+import SocialLinks from "../components/SocialLinks.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Luke DeWitt | Developer">
+  <h2
+    class="mt-2 text-xl sm:text-2xl font-medium text-violet-600 dark:text-violet-400"
+  >
+    Developer
+  </h2>
+
+  <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
+    I'm a developer who lives in Halifax, Nova Scotia. I'm also a husband, and a
+    dad to four amazing kids. I love to build all sorts of stuff across all
+    sorts of tech. I love sports, especially baseball, and find a way to
+    incorporate it into my work!
+  </p>
+
+  <SocialLinks />
+</Layout>
