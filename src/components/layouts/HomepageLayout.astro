@@ -1,6 +1,12 @@
 ---
 import AnimatedSVG from "../AnimatedSVG.astro";
 import ThemeToggle from "../ThemeToggle.astro";
+
+export interface Props {
+  xEyes?: boolean;
+}
+
+const { xEyes = false } = Astro.props;
 ---
 
 <!-- Homepage Layout: Two-column with animated SVG -->
@@ -16,7 +22,7 @@ import ThemeToggle from "../ThemeToggle.astro";
       <div
         class="p-4 sm:p-12 flex justify-center lg:sticky lg:top-12 lg:h-fit"
       >
-        <AnimatedSVG />
+        <AnimatedSVG xEyes={xEyes} />
       </div>
 
       <div class="p-4 sm:p-12 flex flex-col justify-center">

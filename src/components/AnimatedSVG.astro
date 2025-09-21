@@ -1,7 +1,12 @@
 ---
+export interface Props {
+  xEyes?: boolean;
+}
+
+const { xEyes = false } = Astro.props;
 ---
 
-<div class="luke-character">
+<div class="luke-character" data-x-eyes={xEyes}>
    <svg
           xmlns="http://www.w3.org/2000/svg"
           version="1.1"
@@ -477,13 +482,28 @@ L 436.1 122.6
 Q 434.8 124.55 433.1 126.45 430.5 129.4 426.3 132.95 428.05 133.65 429.85 134.65 432.7 136.2 437.7 139.8 447.3 146.6 451.5 150.7 455.15 154.2 461.45 162 469.6 172.1 473.65 177.8 480 186.8 483.7 194.9 485.1 197.95 486.3 201.35 492.1 196.35 494.15 185.9 495.25 180.6 494.1 177.25 492.85 173.8 489.3 171.55 486 169.5 481.9 169.1 479.25 168.85 478.9 168.75 477.25 168.45 476.2 167.65 474.6 166.4 474.5 164.05 474.35 161.85 475.45 159.9 476.35 158.35 478.1 156.65 479.15 155.65 481.3 153.8 485.15 150.3 487.1 146.15 Z"
                     />
 
-                    <path
-                      fill="#D2517A"
-                      stroke="none"
-                      d="
+                    {xEyes ? (
+                      <!-- Hanging tongue for X eyes -->
+                      <path
+                        id="tongue"
+                        fill="#D2517A"
+                        stroke="#000000"
+                        stroke-width="4"
+                        d="
+M 256.15 467.3
+Q 261.95 468.95 271.45 471.55 286.4 475.6 292.55 476.95 298.45 478.25 302.6 478.45 302.6 485 302.6 492 302.6 498 301 504 299.5 510 296 515 292 520 286 523 280 525 273 525 266 523 260 520 255 515 252 508 250 500 250 492 252 485 254.75 478 255.05 460.8 254.75 461.9 255.1 463.45 255.35 464.35 255.9 466.1 256.05 466.75 256.15 467.3 Z"
+                      />
+                    ) : (
+                      <!-- Normal tongue -->
+                      <path
+                        id="tongue"
+                        fill="#D2517A"
+                        stroke="none"
+                        d="
 M 256.15 467.3
 Q 261.95 468.95 271.45 471.55 286.4 475.6 292.55 476.95 298.45 478.25 302.6 478.45 302.6 478.3 302.6 478.15 302.65 477.4 303.6 473.1 304.55 468.75 303.15 464.3 301.75 459.8 298.5 456.75 295.3 453.7 290.75 452.55 286.25 451.45 281.9 452.6 285 458.7 286.5 461.75 286.05 461.6 285.6 461.55 274.8 459.15 273.85 458.25 272.15 456.65 270.65 456.05 268.8 455.3 266.3 455.45 264.65 455.6 261.85 456.25 255.9 457.65 255.05 460.8 254.75 461.9 255.1 463.45 255.35 464.35 255.9 466.1 256.05 466.75 256.15 467.3 Z"
-                    />
+                      />
+                    )}
 
                     <path
                       fill="#EDBB98"
@@ -609,57 +629,73 @@ Q 45.15 24.25 46.3 21.95 46.95 20.6 46.8 18.9 46.65 17.3 45.85 15.85 44.8 13.9 4
 
           <g id="eye1">
             <g id="Layer_1" transform="matrix( 1, 0, 0, 1, 246.55,309.4) ">
-              <g>
+              {xEyes ? (
+                <>
+                  <!-- X eye -->
+                  <line x1="5" y1="5" x2="25" y2="25" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+                  <line x1="25" y1="5" x2="5" y2="25" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+                </>
+              ) : (
                 <g>
                   <g>
-                    <path
-                      fill="#000000"
-                      stroke="none"
-                      d="
+                    <g>
+                      <path
+                        fill="#000000"
+                        stroke="none"
+                        d="
 M 26.95 3
 Q 25.05 1.1 22.75 0.4 20.5 -0.25 17.35 0.1 14.85 0.35 13.15 1.2 11.45 2.05 8.9 4.9 6.65 7.5 5.75 8.65 4.05 10.85 3.15 12.85 2.05 15.2 1.15 19.9 0.2 25.4 0 29.35 -0.1 33.1 0.55 35.4 1.25 37.85 2.95 39.95 4.6 41.95 6.9 43.25 11.45 45.75 16.9 44.8 19.7 44.3 21.6 43 24.05 41.45 26 38.25 31.25 30.05 31.25 16.95 31.25 10.95 29.65 7.15 28.65 4.75 26.95 3
 M 11.1 9.75
 Q 13 8.9 14.95 9.6 16.05 9.95 16.9 10.9 17.75 11.85 17.9 13.05 18.05 14.1 17.8 15.3 17.45 17.25 16.65 18.3 15.85 19.3 14.65 19.7 13.4 20.15 12.2 19.9 10.7 19.5 9.85 18.35 9.2 17.45 8.85 16.05 8.35 13.95 8.65 12.7 9.1 10.65 11.1 9.75 Z"
-                    />
+                      />
 
-                    <path
-                      fill="#FFFFFF"
-                      stroke="none"
-                      d="
+                      <path
+                        fill="#FFFFFF"
+                        stroke="none"
+                        d="
 M 14.95 9.6
 Q 13 8.9 11.1 9.75 9.1 10.65 8.65 12.7 8.35 13.95 8.85 16.05 9.2 17.45 9.85 18.35 10.7 19.5 12.2 19.9 13.4 20.15 14.65 19.7 15.85 19.3 16.65 18.3 17.45 17.25 17.8 15.3 18.05 14.1 17.9 13.05 17.75 11.85 16.9 10.9 16.05 9.95 14.95 9.6 Z"
-                    />
+                      />
+                    </g>
                   </g>
                 </g>
-              </g>
+              )}
             </g>
           </g>
 
           <g id="eye2">
             <g id="Layer_1" transform="matrix( 1, 0, 0, 1, 337.15,296) ">
-              <g>
+              {xEyes ? (
+                <>
+                  <!-- X eye -->
+                  <line x1="5" y1="5" x2="25" y2="25" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+                  <line x1="25" y1="5" x2="5" y2="25" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+                </>
+              ) : (
                 <g>
                   <g>
-                    <path
-                      fill="#000000"
-                      stroke="none"
-                      d="
+                    <g>
+                      <path
+                        fill="#000000"
+                        stroke="none"
+                        d="
 M 29 16.05
 Q 28.05 13.1 25.95 9.8 21.45 2.45 15.85 0.6 12 -0.6 8 0.65 5.4 1.5 3.9 3.1 1.75 5.35 0.8 10.65 -1.2 22.25 1.8 30.55 3.65 35.5 7.3 39 11.2 42.75 16.05 43.65 20.8 44.6 24.1 42.4 26.55 40.85 27.95 37.45 28.9 35.15 29.45 31.3 30.95 21.9 29 16.05
 M 4.45 20.45
 Q 3.7 19.2 3.9 17.25 4.05 15.8 4.75 14.85 5.8 13.3 8.15 13.05 10.2 12.9 11.5 13.85 13.2 15.1 13.2 17.3 13.2 19.35 11.65 20.9 10.1 22.55 7.9 22.45 5.55 22.35 4.45 20.45 Z"
-                    />
+                      />
 
-                    <path
-                      fill="#FFFFFF"
-                      stroke="none"
-                      d="
+                      <path
+                        fill="#FFFFFF"
+                        stroke="none"
+                        d="
 M 3.9 17.25
 Q 3.7 19.2 4.45 20.45 5.55 22.35 7.9 22.45 10.1 22.55 11.65 20.9 13.2 19.35 13.2 17.3 13.2 15.1 11.5 13.85 10.2 12.9 8.15 13.05 5.8 13.3 4.75 14.85 4.05 15.8 3.9 17.25 Z"
-                    />
+                      />
+                    </g>
                   </g>
                 </g>
-              </g>
+              )}
             </g>
           </g>
 
@@ -809,16 +845,21 @@ Q 91.15 8.6 90.7 7.9 Z"
   import { gsap } from 'gsap';
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Wave once on page load
-    gsap.to("#armLower_left", {
-      x: 12,
-      rotation: 15,
-      transformOrigin: "0 50%",
-      yoyo: true,
-      repeat: 1, // Only repeat once (wave goes out and back)
-      duration: 1.5,
-      ease: "power2.inOut"
-    });
+    // Check if this character has X eyes
+    const hasXEyes = document.querySelector('.luke-character').dataset.xEyes === 'true';
+    
+    // Wave once on page load (only for normal eyes)
+    if (!hasXEyes) {
+      gsap.to("#armLower_left", {
+        x: 12,
+        rotation: 15,
+        transformOrigin: "0 50%",
+        yoyo: true,
+        repeat: 1, // Only repeat once (wave goes out and back)
+        duration: 1.5,
+        ease: "power2.inOut"
+      });
+    }
 
     // Animated blinking eyes - random interval blinking
     const blink = () => {
@@ -835,8 +876,10 @@ Q 91.15 8.6 90.7 7.9 Z"
       });
     };
     
-    // Start blinking after initial delay
-    gsap.delayedCall(2, blink);
+    // Start blinking after initial delay (only for normal eyes)
+    if (!hasXEyes) {
+      gsap.delayedCall(2, blink);
+    }
 
     // Wave animation function for interactions
     const waveArm = () => {
@@ -866,9 +909,9 @@ Q 91.15 8.6 90.7 7.9 Z"
     // Expose animateEyebrows globally
     window.animateEyebrows = animateEyebrows;
 
-    // Add interactions to the SVG
+    // Add interactions to the SVG (only for normal eyes)
     const svgElement = document.querySelector('.luke-character svg');
-    if (svgElement) {
+    if (svgElement && !hasXEyes) {
       // Desktop: hover triggers wave and eyebrow animation
       svgElement.addEventListener('mouseenter', () => {
         waveArm();
