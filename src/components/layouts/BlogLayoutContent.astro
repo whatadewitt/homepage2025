@@ -1,0 +1,61 @@
+---
+import ThemeToggle from "../ThemeToggle.astro";
+---
+
+<!-- Blog Layout: Single column with blog header -->
+<div class="min-h-screen p-4 sm:p-6 lg:p-8">
+  <!-- Header with controls -->
+  <header class="flex justify-between items-center mb-8 max-w-4xl mx-auto">
+    <div class="flex items-center gap-4">
+      <a
+        href="/"
+        class="flex-shrink-0 hover:scale-110 transition-transform"
+        title="Back to homepage"
+      >
+        <img 
+          src="/images/luke-head.png" 
+          alt="Luke DeWitt" 
+          class="w-12 h-12 rounded-full"
+        />
+      </a>
+      <div class="flex items-baseline gap-3">
+        <a
+          href="/dew-drops"
+          class="text-2xl font-bold text-violet-600 dark:text-violet-400 hover:text-violet-600 transition-colors leading-none"
+        >
+          Dew Drops
+        </a>
+        <span class="text-xs text-stone-600 dark:text-indigo-200 leading-none"
+          >from Luke DeWitt</span
+        >
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <slot name="controls" />
+      <ThemeToggle />
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="max-w-4xl mx-auto">
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer
+    class="mt-16 max-w-4xl mx-auto pt-8"
+    style="border-top: 1px solid rgba(0, 0, 0, 0.1);"
+  >
+    <div class="text-center text-xs text-stone-600 dark:text-indigo-200">
+      <p class="mt-2">
+        <a
+          href="/"
+          class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+        >
+          Back to homepage
+        </a>
+      </p>
+    </div>
+  </footer>
+</div>

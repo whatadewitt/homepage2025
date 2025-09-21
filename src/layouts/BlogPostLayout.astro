@@ -21,9 +21,9 @@ const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US',
 ---
 
 <BaseLayout 
-  title={`${title} | Dew Drops by Luke DeWitt | whatadewitt.com`}
-  description={excerpt || `${title} - A blog post by Luke DeWitt`}
-  ogImage={featuredImage}
+  title={title + " | Dew Drops by Luke DeWitt | whatadewitt.com"}
+  description={excerpt ? excerpt : (title + " - A blog post by Luke DeWitt")}
+  {...(featuredImage && { ogImage: featuredImage })}
   publishDate={date}
   layout="blog"
 >

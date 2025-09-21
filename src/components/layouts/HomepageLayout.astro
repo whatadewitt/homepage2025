@@ -1,0 +1,32 @@
+---
+import AnimatedSVG from "../AnimatedSVG.astro";
+import ThemeToggle from "../ThemeToggle.astro";
+---
+
+<!-- Homepage Layout: Two-column with animated SVG -->
+<div class="flex justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+  <div class="w-full max-w-6xl mx-auto relative">
+    <!-- Controls Wrapper -->
+    <div class="top-4 flex gap-2 z-10 fixed right-4">
+      <slot name="controls" />
+      <ThemeToggle />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+      <div
+        class="p-4 sm:p-12 flex justify-center lg:sticky lg:top-12 lg:h-fit"
+      >
+        <AnimatedSVG />
+      </div>
+
+      <div class="p-4 sm:p-12 flex flex-col justify-center">
+        <h1
+          class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-800 dark:text-white tracking-tight"
+        >
+          Luke DeWitt
+        </h1>
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
