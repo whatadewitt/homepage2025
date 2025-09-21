@@ -6,6 +6,7 @@ export interface Props {
   ogType?: string;
   publishDate?: string;
   layout?: string;
+  xEyes?: boolean;
 }
 
 const { 
@@ -14,7 +15,8 @@ const {
   ogImage = "/images/luke-head.png",
   ogType = "website",
   publishDate,
-  layout = "page"
+  layout = "page",
+  xEyes = false
 } = Astro.props;
 
 const siteURL = Astro.site || "https://www.whatadewitt.com";
@@ -32,6 +34,7 @@ try {
 } catch (e) {
   ogImageURL = siteURL + "/images/luke-head.png";
 }
+
 
 import HomepageLayout from "../components/layouts/HomepageLayout.astro";
 import BlogLayoutContent from "../components/layouts/BlogLayoutContent.astro";
@@ -63,9 +66,11 @@ import "../styles/global.css";
         document.documentElement.classList.add('dark');
       }
     </script>
+
+    <!-- Google Tag Manager placeholder -->
   </head>
   <body class="min-h-screen">
-    {layout === "homepage" && <HomepageLayout><slot name="controls" slot="controls" /><slot /></HomepageLayout>}
+    {layout === "homepage" && <HomepageLayout xEyes={xEyes}><slot name="controls" slot="controls" /><slot /></HomepageLayout>}
     {layout === "blog" && <BlogLayoutContent><slot name="controls" slot="controls" /><slot /></BlogLayoutContent>}
     {layout === "page" && <PageLayout><slot name="controls" slot="controls" /><slot /></PageLayout>}
   </body>
