@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import PortfolioItem from "../components/PortfolioItem.astro";
 import HomeButton from "../components/HomeButton.astro";
 import { portfolioItems } from "../content/portfolio/items";
@@ -11,7 +11,7 @@ const sortedItems = portfolioItems.sort(
 );
 ---
 
-<Layout title="Luke DeWitt | Portfolio">
+<BaseLayout title="Luke DeWitt | Portfolio" layout="homepage">
   <HomeButton slot="controls" />
 
   <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
@@ -22,4 +22,4 @@ const sortedItems = portfolioItems.sort(
   <div class="grid grid-cols-1 gap-8 mt-6">
     {sortedItems.map((item) => <PortfolioItem item={item} />)}
   </div>
-</Layout>
+</BaseLayout>

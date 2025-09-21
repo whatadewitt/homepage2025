@@ -93,3 +93,23 @@ This HTML file should be integrated into the Astro project structure by converti
 2. **No Testing Framework**: No unit or integration tests set up
 3. **Deployment**: No deployment configuration exists yet (consider Vercel, Netlify, or GitHub Pages)
 4. **Tailwind Integration**: Currently using CDN; consider adding @astrojs/tailwind for better performance
+
+## Google Tag Manager Setup
+
+The site includes Google Tag Manager integration that activates when a GTM ID is provided:
+
+### Setup Instructions
+1. Copy `.env.example` to `.env`
+2. Add your GTM ID: `PUBLIC_GTM_ID=GTM-XXXXXXX`
+3. The GTM scripts will only load when the ID is present
+
+### Implementation Details
+- GTM code is in `src/layouts/BaseLayout.astro`
+- Uses Astro's `import.meta.env.PUBLIC_GTM_ID` for environment variable
+- Includes both the main GTM script (in `<head>`) and noscript fallback (in `<body>`)
+- The `PUBLIC_` prefix makes the variable accessible in client-side code
+
+### Security Notes
+- Never commit your actual `.env` file (it's in .gitignore)
+- Use environment variables in your deployment platform (Vercel, Netlify, etc.)
+- The GTM ID is safe to expose in client-side code

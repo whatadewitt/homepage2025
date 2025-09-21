@@ -1,9 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import HomeButton from "../components/HomeButton.astro";
 ---
 
-<Layout title="Luke DeWitt | 404">
+<BaseLayout title="Luke DeWitt | 404" layout="homepage">
   <HomeButton slot="controls" />
 
   <h2
@@ -27,4 +27,4 @@ import HomeButton from "../components/HomeButton.astro";
       </a>
     </div>
   </div>
-</Layout>
+</BaseLayout>

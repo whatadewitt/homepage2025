@@ -8,7 +8,7 @@ export interface Props {
 }
 
 const { title, date, excerpt, featuredImage, featuredImageAlt } = Astro.props;
-import BlogBaseLayout from "./BlogBaseLayout.astro";
+import BaseLayout from "./BaseLayout.astro";
 import ShareButtons from "../components/ShareButtons.astro";
 
 // Parse date as local time to avoid timezone issues
@@ -20,14 +20,14 @@ const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US',
 });
 ---
 
-<BlogBaseLayout 
+<BaseLayout 
   title={`${title} | Dew Drops by Luke DeWitt | whatadewitt.com`}
   description={excerpt || `${title} - A blog post by Luke DeWitt`}
   ogImage={featuredImage}
   publishDate={date}
+  layout="blog"
 >
   <div>
-    
     <article class="prose prose-lg dark:prose-invert max-w-none">
       <header class="mb-8">
         <h1 class="text-3xl sm:text-4xl font-bold mb-4" style="color: var(--text-color);">
@@ -69,7 +69,7 @@ const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US',
       </div>
     </article>
   </div>
-</BlogBaseLayout>
+</BaseLayout>
 
 <style>
   .content :global(h1),

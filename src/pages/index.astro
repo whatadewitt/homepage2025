@@ -1,9 +1,9 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import SocialLinks from "../components/SocialLinks.astro";
 ---
 
-<Layout title="Luke DeWitt | Developer">
+<BaseLayout title="Luke DeWitt | Developer" layout="homepage">
   <h2
     class="mt-2 text-xl sm:text-2xl font-medium text-violet-600 dark:text-violet-400"
   >
@@ -18,4 +18,4 @@ import SocialLinks from "../components/SocialLinks.astro";
   </p>
 
   <SocialLinks />
-</Layout>
+</BaseLayout>

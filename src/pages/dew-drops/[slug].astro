@@ -1,5 +1,5 @@
 ---
-import BlogLayout from "../../layouts/BlogLayout.astro";
+import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
 
 export async function getStaticPaths() {
   const allPosts = await Astro.glob('../../content/blog/*.md');
@@ -22,7 +22,7 @@ const { post } = Astro.props;
 const { Content } = post;
 ---
 
-<BlogLayout 
+<BlogPostLayout 
   title={post.frontmatter.title}
   date={post.frontmatter.date}
   excerpt={post.frontmatter.excerpt}
@@ -30,4 +30,4 @@ const { Content } = post;
   featuredImageAlt={post.frontmatter.featuredImageAlt}
 >
   <Content />
-</BlogLayout>
+</BlogPostLayout>

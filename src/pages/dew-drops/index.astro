@@ -1,5 +1,5 @@
 ---
-import BlogBaseLayout from "../../layouts/BlogBaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // Get all blog posts
 const allPosts = await Astro.glob("../../content/blog/*.md");
@@ -23,7 +23,11 @@ const sortedPosts = blogPosts
   }));
 ---
 
-<BlogBaseLayout title="Dew Drops by Luke DeWitt | whatadewitt.com">
+<BaseLayout 
+  title="Dew Drops by Luke DeWitt | whatadewitt.com"
+  description="Condensed thoughts. Occasional precipitation."
+  layout="blog"
+>
   <div>
     <p class="text-stone-600 dark:text-indigo-200 mb-8">
       Condensed thoughts. Occasional precipitation.
@@ -97,4 +101,4 @@ const sortedPosts = blogPosts
       )
     }
   </div>
-</BlogBaseLayout>
+</BaseLayout>
