@@ -1,0 +1,33 @@
+---
+import BlogLayout from "../../layouts/BlogLayout.astro";
+
+export async function getStaticPaths() {
+  const allPosts = await Astro.glob('../../content/blog/*.md');
+  
+  // Filter out template files (those starting with _)
+  const blogPosts = allPosts.filter(post => {
+    const filename = post.file.split('/').pop();
+    return filename && !filename.startsWith('_');
+  });
+  
+  return blogPosts.map(post => ({
+    params: { 
+      slug: post.file.split('/').pop()?.replace('.md', '') || ''
+    },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = post;
+---
+
+<BlogLayout 
+  title={post.frontmatter.title}
+  date={post.frontmatter.date}
+  excerpt={post.frontmatter.excerpt}
+  featuredImage={post.frontmatter.featuredImage}
+  featuredImageAlt={post.frontmatter.featuredImageAlt}
+>
+  <Content />
+</BlogLayout>

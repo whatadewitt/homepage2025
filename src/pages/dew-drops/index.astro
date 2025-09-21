@@ -1,0 +1,100 @@
+---
+import BlogBaseLayout from "../../layouts/BlogBaseLayout.astro";
+
+// Get all blog posts
+const allPosts = await Astro.glob("../../content/blog/*.md");
+
+// Filter out template files (those starting with _)
+const blogPosts = allPosts.filter(post => {
+  const filename = post.file.split('/').pop();
+  return filename && !filename.startsWith('_');
+});
+
+// Sort by date (newest first)
+const sortedPosts = blogPosts
+  .sort(
+    (a, b) =>
+      new Date(b.frontmatter.date).getTime() -
+      new Date(a.frontmatter.date).getTime()
+  )
+  .map((post) => ({
+    ...post,
+    slug: post.file.split("/").pop()?.replace(".md", "") || "",
+  }));
+---
+
+<BlogBaseLayout title="Dew Drops by Luke DeWitt | whatadewitt.com">
+  <div>
+    <p class="text-stone-600 dark:text-indigo-200 mb-8">
+      Condensed thoughts. Occasional precipitation.
+    </p>
+
+    {
+      sortedPosts.length === 0 ? (
+        <div class="text-center py-12">
+          <p class="text-stone-600 dark:text-indigo-200 text-lg">
+            No drops yet! Check back soon.
+          </p>
+        </div>
+      ) : (
+        <div class="space-y-8">
+          {sortedPosts.map((post) => {
+            // Parse date as local time to avoid timezone issues
+            const [year, month, day] = post.frontmatter.date.split('-').map(num => parseInt(num));
+            const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+
+            return (
+              <article class="pb-8 last:border-b-0" style="border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                <h3 class="text-xl font-semibold mb-2">
+                  <a
+                    href={`/dew-drops/${post.slug}`}
+                    class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors" style="color: var(--text-color);"
+                  >
+                    {post.frontmatter.title}
+                  </a>
+                </h3>
+
+                <time
+                  datetime={post.frontmatter.date}
+                  class="text-sm text-stone-600 dark:text-indigo-200 mb-3 block"
+                >
+                  {formattedDate}
+                </time>
+
+                {post.frontmatter.featuredImage && (
+                  <div class="mb-4">
+                    <img
+                      src={post.frontmatter.featuredImage}
+                      alt={
+                        post.frontmatter.featuredImageAlt ||
+                        post.frontmatter.title
+                      }
+                      style="width: 100%; height: 8rem; object-fit: cover; border-radius: 0.5rem;"
+                    />
+                  </div>
+                )}
+
+                {post.frontmatter.excerpt && (
+                  <p class="text-stone-600 dark:text-indigo-200 leading-relaxed mb-4">
+                    {post.frontmatter.excerpt}
+                  </p>
+                )}
+
+                <a
+                  href={`/dew-drops/${post.slug}`}
+                  class="text-violet-600 dark:text-violet-400 hover:underline text-sm font-medium"
+                >
+                  Read more →
+                </a>
+              </article>
+            );
+          })}
+        </div>
+      )
+    }
+  </div>
+</BlogBaseLayout>

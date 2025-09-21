@@ -1,11 +1,22 @@
 ---
 export interface Props {
   title: string;
+  description?: string;
+  ogImage?: string;
+  ogType?: string;
+  publishDate?: string;
 }
 
-const { title } = Astro.props;
+const { 
+  title, 
+  description = "Condensed thoughts. Occasional precipitation.", 
+  ogImage = "/images/luke-head.png",
+  ogType = "article",
+  publishDate
+} = Astro.props;
 
-import AnimatedSVG from "../components/AnimatedSVG.astro";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || "https://lukedewitt.com");
+
 import ThemeToggle from "../components/ThemeToggle.astro";
 import "../styles/global.css";
 ---
@@ -16,6 +27,26 @@ import "../styles/global.css";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, canonicalURL)} />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={new URL(ogImage, canonicalURL)} />
+    
+    {publishDate && (
+      <meta property="article:published_time" content={publishDate} />
+    )}
 
     <!-- Font Awesome for icons -->
     <link
@@ -46,31 +77,61 @@ import "../styles/global.css";
     </script>
   </head>
   <body class="min-h-screen">
-    <div class="flex justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-      <div class="w-full max-w-6xl mx-auto relative">
-        <!-- Controls Wrapper -->
-        <div class="top-4 flex gap-2 z-10 fixed right-4">
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+      <!-- Header with controls -->
+      <header class="flex justify-between items-center mb-8 max-w-4xl mx-auto">
+        <div class="flex items-center gap-4">
+          <a
+            href="/"
+            class="flex-shrink-0 hover:scale-110 transition-transform"
+            title="Back to homepage"
+          >
+            <img 
+              src="/images/luke-head.png" 
+              alt="Luke DeWitt" 
+              class="w-12 h-12 rounded-full"
+            />
+          </a>
+          <div class="flex items-baseline gap-3">
+            <a
+              href="/dew-drops"
+              class="text-2xl font-bold text-violet-600 dark:text-violet-400 hover:text-violet-600 transition-colors leading-none"
+            >
+              Dew Drops
+            </a>
+            <span class="text-xs text-stone-600 dark:text-indigo-200 leading-none"
+              >from Luke DeWitt</span
+            >
+          </div>
+        </div>
+
+        <div class="flex gap-2">
           <slot name="controls" />
           <ThemeToggle />
         </div>
+      </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2">
-          <div
-            class="p-4 sm:p-12 flex justify-center lg:sticky lg:top-12 lg:h-fit"
-          >
-            <AnimatedSVG />
-          </div>
+      <!-- Main content -->
+      <main class="max-w-4xl mx-auto">
+        <slot />
+      </main>
 
-          <div class="p-4 sm:p-12 flex flex-col justify-center">
-            <h1
-              class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-800 dark:text-white tracking-tight"
+      <!-- Footer -->
+      <footer
+        class="mt-16 max-w-4xl mx-auto pt-8"
+        style="border-top: 1px solid rgba(0, 0, 0, 0.1);"
+      >
+        <div class="text-center text-xs text-stone-600 dark:text-indigo-200">
+          <p class="mt-2">
+            <a
+              href="/"
+              class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
             >
-              Luke DeWitt
-            </h1>
-            <slot />
-          </div>
+              Back to homepage
+            </a>
+          </p>
         </div>
-      </div>
+      </footer>
     </div>
   </body>
 
