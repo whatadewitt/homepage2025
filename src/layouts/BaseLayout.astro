@@ -35,9 +35,6 @@ try {
   ogImageURL = siteURL + "/images/luke-head.png";
 }
 
-// Google Tag Manager
-const gtmId = Astro.env?.GTM_ID || "";
-
 import HomepageLayout from "../components/layouts/HomepageLayout.astro";
 import BlogLayoutContent from "../components/layouts/BlogLayoutContent.astro";
 import PageLayout from "../components/layouts/PageLayout.astro";
@@ -84,22 +81,24 @@ import "../styles/global.css";
     </script>
 
     <!-- Google Tag Manager -->
-    {gtmId && (
-      <script is:inline>
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          'gtm.start': new Date().getTime(),
-          event: 'gtm.js'
-        });
-      </script>
-      <script type="text/partytown" src={"https://www.googletagmanager.com/gtm.js?id=" + gtmId}></script>
+    {import.meta.env.PUBLIC_GTM_ID && (
+      <>
+        <script is:inline>
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            'gtm.start': new Date().getTime(),
+            event: 'gtm.js'
+          });
+        </script>
+        <script type="text/partytown" src={`https://www.googletagmanager.com/gtm.js?id=${import.meta.env.PUBLIC_GTM_ID}`}></script>
+      </>
     )}
   </head>
   <body class="min-h-screen">
     <!-- Google Tag Manager (noscript) -->
-    {gtmId && (
+    {import.meta.env.PUBLIC_GTM_ID && (
       <noscript>
-        <iframe src={"https://www.googletagmanager.com/ns.html?id=" + gtmId}
+        <iframe src={`https://www.googletagmanager.com/ns.html?id=${import.meta.env.PUBLIC_GTM_ID}`}
           height="0" width="0" style="display:none;visibility:hidden"></iframe>
       </noscript>
     )}
