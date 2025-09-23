@@ -84,25 +84,27 @@ import "../styles/global.css";
     </script>
 
     <!-- Google Tag Manager -->
-    {gtmId && (
-      <script is:inline>
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          'gtm.start': new Date().getTime(),
-          event: 'gtm.js'
-        });
-      </script>
-      <script type="text/partytown" src={"https://www.googletagmanager.com/gtm.js?id=" + gtmId}></script>
-    )}
+    {
+      !gtmId && (
+      <>  
+      <!-- Google Tag Manager -->
+        <script
+          is:inline
+          set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${gtmId}');`}
+        />
+        </>
+      )
+    }
   </head>
   <body class="min-h-screen">
-    <!-- Google Tag Manager (noscript) -->
-    {gtmId && (
-      <noscript>
-        <iframe src={"https://www.googletagmanager.com/ns.html?id=" + gtmId}
-          height="0" width="0" style="display:none;visibility:hidden"></iframe>
-      </noscript>
-    )}
+    { import.meta.env.PUBLIC_GTM_ID && (
+		<noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${import.meta.env.PUBLIC_GTM_ID}`}
+		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		)}
 
     {
       layout === "homepage" && (
