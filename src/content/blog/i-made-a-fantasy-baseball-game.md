@@ -1,6 +1,6 @@
 ---
 title: "I Made a Fantasy Baseball Game"
-date: "2026-04-01"
+date: "2026-04-15"
 excerpt: "I can't believe it's taken this long."
 featuredImage: "/images/fantasy-ball.png"
 featuredImageAlt: "screenshot of Rookie Fantasy Baseball '26"
