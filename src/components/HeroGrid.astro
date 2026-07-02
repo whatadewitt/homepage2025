@@ -1,0 +1,159 @@
+---
+/*
+  HeroGrid.astro — interactive matrix of rounded squares for the hero band.
+
+  Behavior (matches the approved prototype):
+  - A grid of rounded squares fills this element; it rests very faint.
+  - The single square under the cursor lights up and STAYS lit while the
+    cursor is inside it (even if the mouse is still).
+  - When the cursor leaves a square it holds briefly, then fades out slowly.
+  - The whole grid dissolves toward the bottom edge (soft, no hard cutoff).
+  - Color follows the theme: periwinkle in dark, dew teal in light.
+  - Respects prefers-reduced-motion (renders a static faint grid, no motion).
+
+  Placement: drop inside a position:relative wrapper around the hero band
+  (nav + hero). It absolutely fills that wrapper and sits behind the content,
+  so its height = top of page → the character's feet automatically.
+*/
+interface Props {
+  pitch?: number;   // cell-to-cell spacing (px)
+  size?: number;    // square side (px)
+  radius?: number;  // corner radius (px)
+}
+const { pitch = 30, size = 22, radius = 6 } = Astro.props;
+---
+<canvas class="hero-grid" data-pitch={pitch} data-size={size} data-radius={radius}></canvas>
+
+<style>
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none; /* clicks/hover pass through to the hero content */
+    z-index: 0;
+  }
+
+  /* It's a pointer/hover effect — hide it on mobile (touch) screens.
+     The script's early-returns make it inert while hidden, and the
+     ResizeObserver revives it automatically if the viewport grows. */
+  @media (max-width: 767px) {
+    .hero-grid {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function initHeroGrid(canvas: HTMLCanvasElement) {
+    const pitch  = Number(canvas.dataset.pitch  || 30);
+    const size   = Number(canvas.dataset.size   || 22);
+    const radius = Number(canvas.dataset.radius || 6);
+
+    // --- tuned constants (from the approved prototype) ---
+    const HOLD  = 16;    // frames a box stays lit after the cursor leaves it
+    const DECAY = 0.95;  // fade speed once it starts fading (higher = slower)
+    const PEAK  = 0.7;   // max opacity of a lit box
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let w = 0, h = 0, cols = 0, rows = 0;
+    let val: Float32Array, hold: Float32Array;
+    let active = -1, raf = 0;
+
+    function colors() {
+      // Repo uses class-based dark mode (html.dark); light = no `dark` class.
+      const light = !document.documentElement.classList.contains('dark');
+      // unlit boxes rest very faint; lit boxes use the accent (capped by PEAK)
+      return light
+        ? { cell: '20,146,168', idle: 0.035 }   // dew teal (light)
+        : { cell: '139,124,255', idle: 0.028 }; // periwinkle (dark)
+    }
+
+    function measure() {
+      const dpr = window.devicePixelRatio || 1;
+      w = canvas.clientWidth;
+      h = canvas.clientHeight;
+      if (!w || !h) return;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(w / pitch) + 1;
+      rows = Math.ceil(h / pitch) + 1;
+      val = new Float32Array(cols * rows);
+      hold = new Float32Array(cols * rows);
+      if (reduce) draw(); // static one-shot render
+    }
+
+    function rr(x: number, y: number, s: number, r: number) {
+      ctx!.beginPath();
+      ctx!.moveTo(x + r, y);
+      ctx!.arcTo(x + s, y, x + s, y + s, r);
+      ctx!.arcTo(x + s, y + s, x, y + s, r);
+      ctx!.arcTo(x, y + s, x, y, r);
+      ctx!.arcTo(x, y, x + s, y, r);
+      ctx!.closePath();
+    }
+
+    function draw() {
+      if (!val) return;
+      const { cell, idle } = colors();
+      const fadeStart = h * 0.5; // grid dissolves over the bottom half
+      ctx!.clearRect(0, 0, w, h);
+      for (let ry = 0; ry < rows; ry++) for (let cx = 0; cx < cols; cx++) {
+        const i = ry * cols + cx;
+        let v = val[i];
+        if (!reduce) {
+          if (i === active) v = 1;                          // cursor on it → stay lit
+          else if (hold[i] > 0) { hold[i]--; v = 1; }       // just left → sustain
+          else { v *= DECAY; if (v < 0.001) v = 0; }        // then fade
+          val[i] = v;
+        }
+        const cy = ry * pitch + pitch / 2;
+        let f = 1;
+        if (cy > fadeStart) f = Math.max(0, 1 - (cy - fadeStart) / (h - fadeStart));
+        const a = Math.max(idle, v * PEAK) * f;
+        if (a <= 0.002) continue;
+        const x = cx * pitch + (pitch - size) / 2;
+        const y = ry * pitch + (pitch - size) / 2;
+        ctx!.fillStyle = 'rgba(' + cell + ',' + a.toFixed(3) + ')';
+        rr(x, y, size, radius);
+        ctx!.fill();
+      }
+    }
+
+    function ignite(clientX: number, clientY: number) {
+      if (!val) return;
+      const r = canvas.getBoundingClientRect();
+      const px = clientX - r.left, py = clientY - r.top;
+      if (px < 0 || py < 0 || px > r.width || py > r.height) { active = -1; return; }
+      const sx = px * (w / r.width), sy = py * (h / r.height);
+      const cx = Math.floor(sx / pitch), ry = Math.floor(sy / pitch);
+      if (cx < 0 || ry < 0 || cx >= cols || ry >= rows) { active = -1; return; }
+      const i = ry * cols + cx;
+      active = i; val[i] = 1; hold[i] = HOLD;
+    }
+
+    measure();
+    new ResizeObserver(() => measure()).observe(canvas);
+
+    if (!reduce) {
+      window.addEventListener('pointermove', e => {
+        // Don't light cells behind interactive nav controls (pills, Dew Drops,
+        // theme toggle, wordmark) — the canvas is pointer-events:none, so the
+        // real target under the cursor is the link/button itself.
+        const t = e.target;
+        if (t instanceof Element && t.closest('a, button')) { active = -1; return; }
+        ignite(e.clientX, e.clientY);
+      });
+      window.addEventListener('pointerleave', () => { active = -1; });
+      const loop = () => { draw(); raf = requestAnimationFrame(loop); };
+      loop();
+    }
+  }
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas.hero-grid').forEach(initHeroGrid);
+</script>

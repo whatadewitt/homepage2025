@@ -1,0 +1,71 @@
+---
+const facets = [
+  {
+    title: "Dad of four, husband of one",
+    body: "— my wife wanted to make sure I had this first.",
+  },
+  {
+    title: "Conference speaker",
+    body: "— I enjoy giving talks on developer experience, engineering leadership, or anything techy. Planning an event and need a speaker?",
+    href: "https://www.linkedin.com/in/lukedewitt/",
+    linkText: "book me →",
+  },
+  {
+    title: "Baseball diehard",
+    body: "— the Blue Jays own an unreasonable share of my attention — forever fiddling with my fantasy lineups.",
+  },
+  {
+    title: "Builder of things",
+    body: "— maintainer of the Yahoo! Fantasy Sports API client and countless side projects of varied usefulness.",
+  },
+  {
+    title: "Always coaching",
+    body: "— and trying to figure out how the lessons from each avenue help improve the other.",
+  },
+];
+---
+
+<section
+  class="mt-8 sm:mt-12 px-4 sm:px-12 pt-9 pb-16 sm:pb-24 border-t border-stone-300/70 dark:border-white/10"
+>
+  <div
+    class="prompt font-mono text-sm text-violet-600 dark:text-violet-400 tracking-wide mb-5"
+  >
+    $ off_the_keyboard && always_on
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-7">
+    {
+      facets.map((f) => (
+        <div class="flex gap-3">
+          <span class="font-mono text-teal-600 dark:text-teal-400 leading-relaxed">
+            ◌
+          </span>
+          <p class="text-sm leading-relaxed text-stone-600 dark:text-indigo-200">
+            <strong class="text-stone-800 dark:text-white">{f.title}</strong>{" "}
+            {f.body}
+            {f.href && (
+              <>
+                {" "}
+                <a
+                  href={f.href}
+                  target="_blank"
+                  class="text-teal-600 dark:text-teal-400 hover:underline whitespace-nowrap"
+                >
+                  {f.linkText}
+                </a>
+              </>
+            )}
+          </p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .prompt,
+  .font-mono {
+    font-family: var(--font-mono-jetbrains);
+  }
+</style>
