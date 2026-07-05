@@ -14,7 +14,7 @@ const {
 } = Astro.props;
 ---
 
-<nav class="flex items-center justify-between mb-2 sm:mb-4">
+<nav class="relative flex items-center justify-between mb-2 sm:mb-4">
   <a
     href="/"
     class="font-mono text-base font-extrabold tracking-tight text-stone-800 dark:text-white no-underline"
@@ -23,29 +23,117 @@ const {
   </a>
 
   <div class="flex items-center gap-2.5">
+    <!-- Desktop links -->
     <a
       href={github}
       target="_blank"
-      class="nav-pill social-link font-mono text-xs px-3 py-2 rounded-lg border border-stone-300/70 dark:border-white/10 text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:border-stone-400 dark:hover:border-white/25 transition-colors whitespace-nowrap"
+      class="nav-pill social-link hidden sm:inline-block font-mono text-xs px-3 py-2 rounded-lg border border-stone-300/70 dark:border-white/10 text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:border-stone-400 dark:hover:border-white/25 transition-colors whitespace-nowrap"
     >
       GitHub
     </a>
     <a
       href={linkedin}
       target="_blank"
-      class="nav-pill social-link font-mono text-xs px-3 py-2 rounded-lg border border-stone-300/70 dark:border-white/10 text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:border-stone-400 dark:hover:border-white/25 transition-colors whitespace-nowrap"
+      class="nav-pill social-link hidden sm:inline-block font-mono text-xs px-3 py-2 rounded-lg border border-stone-300/70 dark:border-white/10 text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:border-stone-400 dark:hover:border-white/25 transition-colors whitespace-nowrap"
     >
       LinkedIn
     </a>
     <a
       href={blog}
-      class="nav-pill social-link font-mono text-xs px-3 py-2 rounded-lg border border-teal-500/30 dark:border-teal-400/30 bg-teal-500/10 dark:bg-teal-400/10 text-teal-700 dark:text-teal-300 hover:border-teal-500/60 dark:hover:border-teal-400/60 transition-colors whitespace-nowrap"
+      class="nav-pill social-link hidden sm:inline-block font-mono text-xs px-3 py-2 rounded-lg border border-teal-500/30 dark:border-teal-400/30 bg-teal-500/10 dark:bg-teal-400/10 text-teal-700 dark:text-teal-300 hover:border-teal-500/60 dark:hover:border-teal-400/60 transition-colors whitespace-nowrap"
     >
       ◌ Dew Drops
     </a>
+
     <ThemeToggle />
+
+    <!-- Mobile menu toggle -->
+    <button
+      id="nav-menu-toggle"
+      type="button"
+      aria-label="Open navigation menu"
+      aria-expanded="false"
+      aria-controls="nav-mobile-menu"
+      class="nav-pill sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-stone-500 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-gray-800 transition-colors duration-300 cursor-pointer"
+    >
+      <i id="nav-menu-open-icon" class="fas fa-bars fa-lg"></i>
+      <i id="nav-menu-close-icon" class="fas fa-xmark fa-lg !hidden"></i>
+    </button>
+  </div>
+
+  <!-- Mobile dropdown menu -->
+  <div
+    id="nav-mobile-menu"
+    class="hidden sm:hidden absolute right-0 top-full z-20 mt-2 w-48 flex flex-col gap-1 p-2 rounded-xl border border-stone-300/70 dark:border-white/10 bg-white/90 dark:bg-stone-900/90 backdrop-blur shadow-lg shadow-violet-500/5"
+  >
+    <a
+      href={github}
+      target="_blank"
+      class="social-link font-mono text-sm px-3 py-2 rounded-lg text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:bg-stone-500/10 dark:hover:bg-white/5 transition-colors"
+    >
+      GitHub
+    </a>
+    <a
+      href={linkedin}
+      target="_blank"
+      class="social-link font-mono text-sm px-3 py-2 rounded-lg text-stone-600 dark:text-indigo-200 hover:text-stone-900 dark:hover:text-white hover:bg-stone-500/10 dark:hover:bg-white/5 transition-colors"
+    >
+      LinkedIn
+    </a>
+    <a
+      href={blog}
+      class="social-link font-mono text-sm px-3 py-2 rounded-lg text-teal-700 dark:text-teal-300 hover:bg-teal-500/10 dark:hover:bg-teal-400/10 transition-colors"
+    >
+      ◌ Dew Drops
+    </a>
   </div>
 </nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("nav-menu-toggle");
+    const menu = document.getElementById("nav-mobile-menu");
+    const openIcon = document.getElementById("nav-menu-open-icon");
+    const closeIcon = document.getElementById("nav-menu-close-icon");
+
+    if (!toggle || !menu || !openIcon || !closeIcon) return;
+
+    const setOpen = (open: boolean) => {
+      menu.classList.toggle("hidden", !open);
+      openIcon.classList.toggle("!hidden", open);
+      closeIcon.classList.toggle("!hidden", !open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute(
+        "aria-label",
+        open ? "Close navigation menu" : "Open navigation menu"
+      );
+    };
+
+    const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
+
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(!isOpen());
+    });
+
+    // Close when tapping outside the menu
+    document.addEventListener("click", (e) => {
+      if (!isOpen()) return;
+      const target = e.target as Node;
+      if (!menu.contains(target) && !toggle.contains(target)) {
+        setOpen(false);
+      }
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isOpen()) {
+        setOpen(false);
+        (toggle as HTMLButtonElement).focus();
+      }
+    });
+  });
+</script>
 
 <style>
   .font-mono {
