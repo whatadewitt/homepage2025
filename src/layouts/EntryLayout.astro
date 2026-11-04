@@ -178,6 +178,8 @@ const allLinks = [
   .entry {
     max-width: 760px;
     padding-bottom: 96px;
+    /* Lets .entry__image size against the column's width (cqi). */
+    container-type: inline-size;
   }
 
   .entry__meta {
@@ -211,7 +213,9 @@ const allLinks = [
   .entry__image {
     display: block;
     width: 100%;
-    max-height: 420px;
+    /* No taller than 16:9: wide images keep their shape, square or tall ones
+       crop to a banner (aim the crop with imagePosition). */
+    max-height: min(420px, 56.25cqi);
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--line);
