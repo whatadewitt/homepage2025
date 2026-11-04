@@ -5,8 +5,10 @@
 import { getPosts, formatPostDate } from "./posts";
 import { getProjects, getTalks, isoDate } from "./entries";
 
-export interface FsFile {
-  /** Slug; listed as `<name>.md`. */
+/** A post, project or talk: a folder in the terminal, with its summary as
+ * README.md inside. */
+export interface FsPage {
+  /** Slug. */
   name: string;
   href: string;
   title: string;
@@ -18,7 +20,7 @@ export interface FsFile {
 export interface FsDir {
   name: string;
   href: string;
-  files: FsFile[];
+  pages: FsPage[];
 }
 
 export async function siteFs(): Promise<FsDir[]> {
@@ -27,7 +29,7 @@ export async function siteFs(): Promise<FsDir[]> {
     {
       name: "dew-drops",
       href: "/dew-drops",
-      files: getPosts().map((p) => ({
+      pages: getPosts().map((p) => ({
         name: p.slug,
         href: `/dew-drops/${p.slug}`,
         title: p.frontmatter.title,
@@ -38,7 +40,7 @@ export async function siteFs(): Promise<FsDir[]> {
     {
       name: "projects",
       href: "/projects",
-      files: projects.map((p) => ({
+      pages: projects.map((p) => ({
         name: p.id,
         href: `/projects/${p.id}`,
         title: p.data.title,
@@ -49,7 +51,7 @@ export async function siteFs(): Promise<FsDir[]> {
     {
       name: "talks",
       href: "/speaking",
-      files: talks.map((t) => ({
+      pages: talks.map((t) => ({
         name: t.id,
         href: `/speaking/${t.id}`,
         title: t.data.title,

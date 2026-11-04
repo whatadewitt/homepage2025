@@ -1,12 +1,13 @@
 // The docked terminal in full terminal mode: the site as folders to cd, ls,
-// cat and open. Scrollback and history live in sessionStorage, so `open`
-// moves to a new page with the terminal still open and the session intact.
-// Pages reached any other way (nav, links) are logged as the cd and open
-// that would have got you there, so the session reads as your path through
-// the site.
+// cat and open. Every page is a folder: ~, ~/projects, ~/projects/rookie...,
+// and `open` goes to a folder's page and moves you into it. Scrollback and
+// history live in sessionStorage, so the terminal stays open, session intact,
+// from page to page. Pages reached any other way (nav, links) are logged as
+// the `open` that would have got you there, so the session reads as your path
+// through the site.
 
 import { CONSOLE_KEY } from "../data/themes";
-import type { FsDir, FsFile } from "../lib/sitefs";
+import type { FsDir, FsPage } from "../lib/sitefs";
 
 const root = document.documentElement;
 const panel = document.querySelector<HTMLElement>("[data-console]");
@@ -98,21 +99,23 @@ function setup(panel: HTMLElement) {
 
   const FOLDERS = ["dew-drops", "projects", "talks"];
 
-  /** cwd is [] for ~ or [folder]. */
+  /** Folders from ~: [], [section] or [section, page]. */
   let cwd: string[] = saved.cwd ?? [];
 
-  /** Folder and file for a site path, or null for one that isn't in the fs. */
-  function locate(path: string): { dir?: string; file?: string } | null {
-    if (path === "/") return {};
-    const [, top, file, extra] = path.split("/");
-    const dir = ALIASES[top] ?? top;
-    if (!FOLDERS.includes(dir) || extra) return null;
-    return file ? { dir, file } : { dir };
+  /** A site path as folders from ~, or null for one that isn't in the fs. */
+  function locate(path: string): string[] | null {
+    const parts = path.split("/").filter(Boolean);
+    if (parts[0]) parts[0] = ALIASES[parts[0]] ?? parts[0];
+    if (parts.length > 2 || (parts[0] && !FOLDERS.includes(parts[0]))) return null;
+    return parts;
   }
 
   interface Node {
+    /** The folder, from ~ (README.md's is its page). */
+    parts: string[];
     dir?: FsDir;
-    file?: FsFile;
+    page?: FsPage;
+    readme?: boolean;
   }
 
   function resolve(arg: string): Node | null {
@@ -122,15 +125,31 @@ function setup(panel: HTMLElement) {
       if (seg === "..") parts.pop();
       else parts.push(seg);
     }
-    if (parts.length === 0) return {};
+    if (parts.length === 0) return { parts };
     const dir = fs.find((d) => d.name === (ALIASES[parts[0]] ?? parts[0]));
-    if (!dir || parts.length > 2) return null;
-    if (parts.length === 1) return { dir };
-    const file = dir.files.find((f) => f.name === parts[1].replace(/\.md$/, ""));
-    return file ? { dir, file } : null;
+    if (!dir || parts.length > 3) return null;
+    if (parts.length === 1) return { parts: [dir.name], dir };
+    const page = dir.pages.find((p) => p.name === parts[1]);
+    if (!page) return null;
+    const node = { parts: [dir.name, page.name], dir, page };
+    if (parts.length === 2) return node;
+    return parts[2] === "README.md" ? { ...node, readme: true } : null;
   }
 
-  const here = () => (cwd.length ? `~/${cwd[0]}` : "~");
+  /** The shortest way to write a folder from where you are. */
+  function pathTo(target: string[]) {
+    if (!target.length) return cwd.length ? "~" : ".";
+    let shared = 0;
+    while (shared < Math.min(cwd.length, target.length) && cwd[shared] === target[shared]) {
+      shared++;
+    }
+    const ups = cwd.length - shared;
+    const rest = target.slice(shared);
+    if (ups > 1 && rest.length) return ["~", ...target].join("/");
+    return [...Array<string>(ups).fill(".."), ...rest].join("/") || ".";
+  }
+
+  const here = () => ["~", ...cwd].join("/");
 
   function syncPrompt() {
     promptPath.textContent = here();
@@ -164,18 +183,17 @@ function setup(panel: HTMLElement) {
     return b;
   }
 
-  function dirButton(d: FsDir) {
-    const b = runButton(`cd ~/${d.name}`, `${d.name}/`);
+  /** A folder in a listing; tapping it opens its page. */
+  function dirButton(parts: string[]) {
+    const b = runButton(`open ~/${parts.join("/")}`, `${parts.at(-1)}/`);
     b.className = "c-dir";
     return b;
   }
 
-  function fileLink(f: FsFile) {
-    const a = document.createElement("a");
-    a.className = "c-file";
-    a.href = f.href;
-    a.textContent = `${f.name}.md`;
-    return a;
+  function readmeButton(parts: string[]) {
+    const b = runButton(`cat ~/${parts.join("/")}/README.md`, "README.md");
+    b.className = "c-file";
+    return b;
   }
 
   function echoCommand(text: string) {
@@ -195,8 +213,8 @@ function setup(panel: HTMLElement) {
   const HELP: [string, string][] = [
     ["ls [path]", "list what’s here (-l for titles)"],
     ["cd <path>", "move into a folder (.., ~)"],
-    ["cat <file>", "read a page’s summary"],
-    ["open <path>", "go to the page (open . for this folder)"],
+    ["cat README.md", "read a page’s summary"],
+    ["open <path>", "go to a folder’s page (open . for this one)"],
     ["pwd", "where am I?"],
     ["history", "what you’ve typed"],
     ["clear", "clear the screen (ctrl+l)"],
@@ -216,25 +234,27 @@ function setup(panel: HTMLElement) {
       const node = resolve(target);
       if (!node) return void print("c-err", `ls: ${target}: No such file or directory`);
       const grid = print(long ? "c-long" : "c-ls");
-      if (node.file) return void grid.append(fileLink(node.file));
-      if (!node.dir) {
-        for (const d of fs) {
-          grid.append(dirButton(d));
-          if (long) grid.append(span("c-muted", `${d.files.length} items`));
+      if (node.page) {
+        grid.append(readmeButton(node.parts));
+        if (long) grid.append(span("c-muted", node.page.title));
+      } else if (node.dir) {
+        for (const p of node.dir.pages) {
+          grid.append(dirButton([node.dir.name, p.name]));
+          if (long) grid.append(span("c-muted", p.title));
         }
-        return;
-      }
-      for (const f of node.dir.files) {
-        grid.append(fileLink(f));
-        if (long) grid.append(span("c-muted", f.title));
+      } else {
+        for (const d of fs) {
+          grid.append(dirButton([d.name]));
+          if (long) grid.append(span("c-muted", `${d.pages.length} items`));
+        }
       }
     },
 
     cd([target = "~"]) {
       const node = resolve(target);
       if (!node) return void print("c-err", `cd: no such file or directory: ${target}`);
-      if (node.file) return void print("c-err", `cd: not a directory: ${target}`);
-      cwd = node.dir ? [node.dir.name] : [];
+      if (node.readme) return void print("c-err", `cd: not a directory: ${target}`);
+      cwd = node.parts;
       syncPrompt();
     },
 
@@ -242,21 +262,21 @@ function setup(panel: HTMLElement) {
       if (!target) return void print("c-err", "usage: cat <file>");
       const node = resolve(target);
       if (!node) return void print("c-err", `cat: ${target}: No such file or directory`);
-      if (!node.file) return void print("c-err", `cat: ${target}: Is a directory`);
-      const f = node.file;
-      print("c-title", f.title);
-      print("c-meta", f.meta);
-      if (f.summary) print("", f.summary);
-      print("c-muted").append("→ ", runButton(`open ~/${node.dir!.name}/${f.name}`, `open ${f.name}`));
+      if (!node.readme) return void print("c-err", `cat: ${target}: Is a directory`);
+      const p = node.page!;
+      print("c-title", p.title);
+      print("c-meta", p.meta);
+      if (p.summary) print("", p.summary);
+      print("c-muted").append("→ ", runButton(`open ~/${node.parts.join("/")}`));
     },
 
     open([target]) {
       if (!target) return void print("c-err", "usage: open <path>");
       const node = resolve(target);
       if (!node) return void print("c-err", `open: ${target}: No such file or directory`);
-      const href = node.file?.href ?? node.dir?.href ?? "/";
-      // The prompt follows you to the folder of the page you open.
-      cwd = node.dir ? [node.dir.name] : [];
+      const href = node.page?.href ?? node.dir?.href ?? "/";
+      // Opening a page puts you in its folder.
+      cwd = node.parts;
       syncPrompt();
       if (page === href) return void print("c-muted", "you’re already here");
       print("c-muted", `opening ${href}…`);
@@ -267,7 +287,7 @@ function setup(panel: HTMLElement) {
     },
 
     pwd() {
-      print("", `/home/visitor${cwd.length ? `/${cwd[0]}` : ""}`);
+      print("", ["/home/visitor", ...cwd].join("/"));
     },
 
     history() {
@@ -326,10 +346,12 @@ function setup(panel: HTMLElement) {
       const slash = word.lastIndexOf("/");
       base = word.slice(0, slash + 1);
       const node = resolve(base || ".");
-      if (!node || node.file) return;
-      options = node.dir
-        ? node.dir.files.map((f) => `${f.name}.md `)
-        : fs.map((d) => `${d.name}/`);
+      if (!node || node.readme) return;
+      options = node.page
+        ? ["README.md "]
+        : node.dir
+          ? node.dir.pages.map((p) => `${p.name}/`)
+          : fs.map((d) => `${d.name}/`);
       if (words[0] === "cd") options = options.filter((o) => o.endsWith("/"));
     }
     const prefix = word.slice(base.length);
@@ -453,18 +475,14 @@ function setup(panel: HTMLElement) {
       echoCommand(cmd);
       remember(cmd);
     };
-    const at = locate(page);
-    if (!at) {
+    const target = locate(page);
+    if (!target) {
       typed(`open ${page}`);
       print("c-err", `open: ${page}: No such file or directory`);
       return;
     }
-    const target = at.dir ? [at.dir] : [];
-    if (target.join() !== cwd.join()) {
-      typed(`cd ${!at.dir ? "~" : cwd.length ? `../${at.dir}` : at.dir}`);
-      cwd = target;
-    }
-    typed(`open ${at.file ? `${at.file}.md` : "."}`);
+    typed(`open ${pathTo(target)}`);
+    cwd = target;
     print("c-muted", `opening ${page}…`);
   }
 
