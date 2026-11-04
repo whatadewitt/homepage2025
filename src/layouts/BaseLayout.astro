@@ -1,6 +1,7 @@
 ---
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import Console from "../components/Console.astro";
 import {
   THEMES,
   DEFAULT_DARK,
@@ -8,6 +9,7 @@ import {
   THEME_KEY,
   TERM_KEY,
   INTRO_KEY,
+  CONSOLE_KEY,
 } from "../data/themes";
 import "../styles/global.css";
 
@@ -56,6 +58,7 @@ const boot = {
   themeKey: THEME_KEY,
   termKey: TERM_KEY,
   introKey: INTRO_KEY,
+  consoleKey: CONSOLE_KEY,
 };
 ---
 
@@ -125,11 +128,14 @@ const boot = {
       d.dataset.mode = boot.modes[theme];
       d.classList.toggle("dark", boot.modes[theme] === "dark");
       d.dataset.term = get(boot.termKey) === "on" ? "on" : "off";
-      // First homepage view this session: the name types itself out.
       try {
+        // First homepage view this session: the name types itself out.
         if (!window.sessionStorage.getItem(boot.introKey)) {
           d.classList.add("type-intro");
         }
+        // The terminal was open on the last page: it's still open here.
+        var term = JSON.parse(window.sessionStorage.getItem(boot.consoleKey) || "{}");
+        if (term.open) d.classList.add("console-open");
       } catch (e) {}
     </script>
 
@@ -159,6 +165,7 @@ const boot = {
       <slot />
     </main>
     <SiteFooter />
+    <Console />
 
     <script>
       import "../scripts/site";

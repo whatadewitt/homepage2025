@@ -28,3 +28,5 @@ export const TERM_KEY = "dw-term";
 
 // sessionStorage: the hero name has typed itself out this session.
 export const INTRO_KEY = "dw-typed";
+// sessionStorage: the terminal's open state, scrollback and history.
+export const CONSOLE_KEY = "dw-console";

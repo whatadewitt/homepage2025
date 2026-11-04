@@ -1,0 +1,265 @@
+---
+// The terminal docked along the bottom in full terminal mode: cd, ls, cat and
+// open over the site's pages. Behavior lives in scripts/console.ts; open state
+// is on <html> (.console-open), set before paint by BaseLayout.
+---
+
+<button
+  type="button"
+  class="ctrl console-launch"
+  aria-controls="console"
+  aria-expanded="false"
+  data-console-launch
+>
+  <span aria-hidden="true">&gt;_</span> terminal
+</button>
+
+<section id="console" class="console" aria-label="Terminal" data-console>
+  <div class="console__bar">
+    <span class="console__title" data-console-title>visitor@whatadewitt: ~</span>
+    <button type="button" class="console__btn" aria-label="Minimize terminal" data-console-min>
+      <span aria-hidden="true">_</span>
+    </button>
+    <button type="button" class="console__btn" aria-label="Close terminal" data-console-close>
+      <span aria-hidden="true">✕</span>
+    </button>
+  </div>
+  <div class="console__scroll" data-console-scroll>
+    <div class="console__out" role="log" aria-live="polite" data-console-out></div>
+    <form class="console__line" data-console-form>
+      <label for="console-input" class="c-prompt" data-console-prompt>
+        <span class="c-host">visitor@whatadewitt:</span><span class="c-path">~</span>$
+      </label>
+      <input
+        id="console-input"
+        class="console__input"
+        type="text"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="go"
+        data-console-input
+      />
+    </form>
+  </div>
+</section>
+
+<script>
+  import "../scripts/console";
+</script>
+
+<style>
+  :global(:root) {
+    --console-h: clamp(240px, 42svh, 480px);
+  }
+
+  /* Open terminal covers the bottom of the page; leave room to scroll past. */
+  :global(html.console-open[data-term="on"] body) {
+    padding-bottom: var(--console-h);
+  }
+
+  .console-launch {
+    display: none;
+    position: fixed;
+    right: clamp(16px, 3vw, 24px);
+    bottom: clamp(16px, 3vw, 24px);
+    z-index: 30;
+    gap: 6px;
+    box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  }
+
+  :global(html[data-term="on"]:not(.console-open)) .console-launch {
+    display: inline-flex;
+  }
+
+  .console {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 30;
+    height: var(--console-h);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    color: var(--ink);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 0.3);
+    font: 400 15px/1.6 var(--font-mono);
+    visibility: hidden;
+    transform: translateY(100%);
+  }
+
+  :global(html.console-open[data-term="on"]) .console {
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Slides only when opened or closed, not when a page loads with it open. */
+  :global(html.console-anim) .console {
+    transition:
+      transform 220ms ease,
+      visibility 0s 220ms;
+  }
+
+  :global(html.console-anim.console-open) .console {
+    transition:
+      transform 220ms ease,
+      visibility 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.console-anim) .console {
+      transition: none;
+    }
+  }
+
+  .console__bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .console__title {
+    margin-right: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .console__btn {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .console__btn:hover {
+    color: var(--ink);
+    background: var(--bg);
+  }
+
+  .console__scroll {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 16px 20px;
+    cursor: text;
+  }
+
+  .console__line {
+    display: flex;
+    gap: 1ch;
+  }
+
+  .console__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    caret-color: var(--accent);
+  }
+
+  /* Output is built by the script, so it's styled globally under .console. */
+  .console :global(.c-prompt) {
+    white-space: nowrap;
+    color: var(--prompt);
+  }
+
+  .console :global(.c-path) {
+    color: var(--blue);
+  }
+
+  .console__out > :global(*) {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .console__out :global(.c-err) {
+    color: var(--red);
+  }
+
+  .console__out :global(.c-muted) {
+    color: var(--muted);
+  }
+
+  .console__out :global(.c-title) {
+    font-weight: 600;
+  }
+
+  .console__out :global(.c-meta) {
+    color: var(--yellow);
+  }
+
+  .console__out :global(.c-ls) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 3ch;
+  }
+
+  .console__out :global(.c-long) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 3ch;
+  }
+
+  .console__out :global(.c-long > .c-muted) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .console__out :global(.c-dir),
+  .console__out :global(.c-run) {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .console__out :global(.c-dir) {
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .console__out :global(.c-file) {
+    color: var(--cyan);
+    text-decoration: none;
+  }
+
+  .console__out :global(.c-run) {
+    color: var(--accent);
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+  }
+
+  .console__out :global(.c-dir:hover),
+  .console__out :global(.c-file:hover) {
+    text-decoration: underline;
+  }
+
+  /* The title bar already says who and where. */
+  @media (max-width: 639px) {
+    .console :global(.c-host) {
+      display: none;
+    }
+
+    /* Under 16px, iOS zooms the page when the input takes focus. */
+    .console__input {
+      font-size: 16px;
+    }
+  }
+</style>
