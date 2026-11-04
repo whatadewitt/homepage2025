@@ -12,7 +12,7 @@ export interface Props {
   pageTitle: string;
   title: string;
   summary: string;
-  /** Shown as `$ cat <path>` above the title. */
+  /** Shown as `$ cd <path>` above the title; the page's folder in the terminal. */
   path: string;
   /** Mono details above the title, e.g. event, date, location. */
   meta: string[];
@@ -64,7 +64,7 @@ const allLinks = [
   <article class="entry">
     <header class="page-head">
       <p class="prompt-line">
-        <span class="prompt">$</span> cat <span class="t-arg">{path}</span>
+        <span class="prompt">$</span> cd <span class="t-arg">{path}</span>
       </p>
       {
         meta.length > 0 && (
