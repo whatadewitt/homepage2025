@@ -1,0 +1,24 @@
+{
+  "width": 1440,
+  "height": 810,
+  "widths": [
+    720,
+    1440
+  ],
+  "pdf": "/talks/recursion-and-javascript.pdf",
+  "alts": [
+    "WTF",
+    "I LOVE RECURSION",
+    "AS LONG AS THERE’S BEEN JAVASCRIPT, THERE HAVE BEEN ISSUES WITH RECURSION… ▸… of course, that hasn’t been JavaScripts only problem as long as it has been around…",
+    "WHY? ▸JavaScript is not tail call optimized",
+    "WHAT? ▸Tail Call Optimized",
+    "TAIL CALL OPTIMIZATION ▸JavaScript recursive functions need to keep track of where they were called from each time, so they can resume at the correct point ▸Recursive functions stack up on each other ▸The stack builds up and eventually you run out of memory",
+    "UNTIL THIS…",
+    "UNTIL THIS…",
+    "WHAT? ▸calling the function recursively from within a timeout will clear the stack ▸… or at least that’s how he explained it.",
+    "SO…",
+    "TURNS OUT… ▸Tail call optimization is part of the standard for ES6, yet has not been implemented by most platforms… ▸iOS10 supports it ▸#appleFTW ▸Node > 6.5 supports it ▸Only when running in “harmony” mode ▸run node using the ‘—harmony’ flag ▸full table here: https://kangax.github.io/compat-table/es6/",
+    "SO…",
+    "THANK YOU! HERE’S A FUN GIF"
+  ]
+}

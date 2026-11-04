@@ -1,4 +1,669 @@
 @import 'tailwindcss';
 
-/* Configure Tailwind v4 to use class-based dark mode */
+/* Legacy components (AnimatedSVG etc.) still use Tailwind's dark: variant;
+   the head script keeps html.dark in sync with the active theme's mode. */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Tokens. State lives on <html>: data-theme, data-mode (derived from the
+   theme), data-term. Every color on the site reads from these.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --header-h: 77px;
+}
+
+:root,
+[data-theme="wad-dark"] {
+  --bg: #111111;
+  --surface: #1A1A1F;
+  --line: #2A2A33;
+  --row-line: #1F1F26;
+  --ink: #E0E7FF;
+  --ink-soft: #C7D2FE;
+  --muted: #A1A1B5;
+  --accent: #A78BFA;
+  --on-accent: #111111;
+  --prompt: #2DD4BF;
+  --red: #F87171;
+  --green: #4ADE80;
+  --yellow: #FACC15;
+  --blue: #60A5FA;
+  --magenta: #F472B6;
+  --cyan: #2DD4BF;
+}
+
+[data-theme="wad-light"] {
+  --bg: #F5F3FF;
+  --surface: #FFFFFF;
+  --line: #DCD6F0;
+  --row-line: #E9E5F7;
+  --ink: #1C1917;
+  --ink-soft: #44403C;
+  --muted: #57534E;
+  --accent: #0F766E;
+  --on-accent: #FFFFFF;
+  --prompt: #0F766E;
+  --red: #B91C1C;
+  --green: #157D3C;
+  --yellow: #9E6007;
+  --blue: #1D4ED8;
+  --magenta: #A21CAF;
+  --cyan: #0E7490;
+}
+
+[data-theme="tokyo-night"] {
+  --bg: #1A1B26;
+  --surface: #1F2335;
+  --line: #292E42;
+  --row-line: #232637;
+  --ink: #C0CAF5;
+  --ink-soft: #A9B1D6;
+  --muted: #9AA5CE;
+  --accent: #7AA2F7;
+  --on-accent: #1A1B26;
+  --prompt: #9ECE6A;
+  --red: #F7768E;
+  --green: #9ECE6A;
+  --yellow: #E0AF68;
+  --blue: #7AA2F7;
+  --magenta: #BB9AF7;
+  --cyan: #7DCFFF;
+}
+
+[data-theme="dracula"] {
+  --bg: #282A36;
+  --surface: #21222C;
+  --line: #44475A;
+  --row-line: #343746;
+  --ink: #F8F8F2;
+  --ink-soft: #E2E2DC;
+  --muted: #B4B8CF;
+  --accent: #BD93F9;
+  --on-accent: #282A36;
+  --prompt: #50FA7B;
+  --red: #FF5858;
+  --green: #50FA7B;
+  --yellow: #F1FA8C;
+  --blue: #BD93F9;
+  --magenta: #FF79C6;
+  --cyan: #8BE9FD;
+}
+
+/* Catppuccin's stock mauve (#8839EF) is 4.45:1 on mantle; nudged to pass. */
+[data-theme="latte"] {
+  --bg: #EFF1F5;
+  --surface: #E6E9EF;
+  --line: #CCD0DA;
+  --row-line: #DCE0E8;
+  --ink: #4C4F69;
+  --ink-soft: #4C4F69;
+  --muted: #5C5F77;
+  --accent: #8436EB;
+  --on-accent: #FFFFFF;
+  --prompt: #8436EB;
+  --red: #CE0F38;
+  --green: #2F7620;
+  --yellow: #8F5B13;
+  --blue: #1C5EE1;
+  --magenta: #8436EB;
+  --cyan: #127277;
+}
+
+[data-mode="dark"] { color-scheme: dark; }
+[data-mode="light"] { color-scheme: light; }
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+
+html {
+  background: var(--bg);
+  scroll-padding-top: calc(var(--header-h) + 16px);
+}
+
+/* Unsplit text (buttons, post bodies) flips to mono in one step, shortly
+   after the split text starts. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition-property: background-color, color, font-family;
+  transition-duration: 200ms, 200ms, 0s;
+  transition-delay: 0s, 0s, 150ms;
+  transition-behavior: allow-discrete;
+}
+
+[data-term="on"] body { font-family: var(--font-mono); }
+
+a { color: var(--accent); }
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection { background: var(--accent); color: var(--on-accent); }
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  user-select: none;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-inline: clamp(16px, 5vw, 48px);
+  box-sizing: border-box;
+}
+
+.mono { font-family: var(--font-mono); }
+
+/* Header controls: pill buttons, at least 44px tall. */
+.ctrl {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px var(--font-mono);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ctrl:hover { border-color: var(--muted); }
+
+/* Visually hidden on small screens, still read by screen readers. */
+@media (max-width: 639px) {
+  .hide-sm {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Full terminal: per-character font flip. Each .ch carries its own
+   transition-delay; font-family is discrete, so with allow-discrete and a 0s
+   duration it flips exactly at that delay.
+   --------------------------------------------------------------------------- */
+
+.ch,
+.tf {
+  font-family: var(--font-sans);
+}
+
+/* Only when the switch is flipped (site.ts adds .term-anim): a page that
+   loads already in full terminal shouldn't animate into it, including when
+   site.ts sets --mono-size / --mono-ls after the first paint. */
+.term-anim .ch,
+.term-anim .tf {
+  transition-property: font-family;
+  transition-duration: 0s;
+  transition-behavior: allow-discrete;
+}
+
+/* Mono is wider than Geist, so in full terminal each split element shrinks
+   its mono a little (--mono-size) and nudges letter-spacing (--mono-ls) to
+   keep roughly the same width and line breaks. site.ts measures both. */
+.term-anim .ch {
+  transition-property: font-family, font-size, letter-spacing;
+  transition-delay: var(--d, 0ms);
+}
+
+[data-term="on"] .ch,
+[data-term="on"] .tf {
+  font-family: var(--font-mono);
+}
+
+[data-term="on"] .ch {
+  font-size: var(--mono-size, 1em);
+  /* Unset until measured; letter-spacing then inherits as usual. */
+  letter-spacing: var(--mono-ls);
+}
+
+/* Long-form text flips in one step with the body; scale it the same way. */
+.term-anim .prose {
+  transition: font-size 0s 150ms;
+}
+
+[data-term="on"] .prose {
+  font-size: calc(18px * var(--mono-k, 1));
+}
+
+/* Each split element gets a block cursor that sweeps across it as the font
+   flips: every character is inverted for --cur ms starting at its own delay.
+   Only after a toggle (html.term-anim), so page loads stay still. Two
+   identical keyframes so switching the name restarts the sweep. */
+:root {
+  --cur-bg: var(--accent);
+  --cur-fg: var(--on-accent);
+}
+
+.term-anim[data-term="on"] .ch {
+  animation: cursor-on var(--cur, 20ms) steps(1, end) var(--d, 0ms);
+}
+
+.term-anim[data-term="off"] .ch {
+  animation: cursor-off var(--cur, 20ms) steps(1, end) var(--d, 0ms);
+}
+
+@keyframes cursor-on {
+  from, to { background: var(--cur-bg); color: var(--cur-fg); }
+}
+
+@keyframes cursor-off {
+  from, to { background: var(--cur-bg); color: var(--cur-fg); }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared bits: prompts, buttons, rows, cards
+   --------------------------------------------------------------------------- */
+
+/* Shell prompts, syntax-colored from the theme's ANSI palette:
+   $ cmd <arg> <flag> <op> */
+.prompt-line {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.prompt { color: var(--prompt); }
+.t-arg { color: var(--cyan); }
+.t-flag { color: var(--yellow); }
+.t-op { color: var(--magenta); }
+.t-str { color: var(--green); }
+
+.date { color: var(--yellow); }
+
+/* Buttons: on hover/focus the label swaps for the shell command it "runs".
+   Both sit in one grid cell so the button never changes size. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.btn__face {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+}
+
+.btn__face > * { grid-area: 1 / 1; }
+
+.btn {
+  max-width: 100%;
+}
+
+.btn__face {
+  min-width: 0;
+}
+
+/* Keep commands short; if one is too long it truncates rather than widening
+   the button. */
+.btn__cmd {
+  visibility: hidden;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn__caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.2em;
+  background: currentColor;
+  animation: blink 1.1s steps(1) infinite;
+}
+
+.btn:focus-visible .btn__label { visibility: hidden; }
+.btn:focus-visible .btn__cmd { visibility: visible; }
+
+@media (hover: hover) {
+  .btn:hover .btn__label { visibility: hidden; }
+  .btn:hover .btn__cmd { visibility: visible; }
+}
+
+.btn--primary {
+  --cur-bg: var(--on-accent);
+  --cur-fg: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.btn--primary:hover { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); }
+
+.btn--secondary {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.btn--secondary:hover { border-color: var(--accent); }
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Blinking block after each page title (Cursor.astro). Hidden while the
+   terminal switch flips: the sweeping per-character cursors take over. */
+.cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  margin-left: 0.06em;
+  vertical-align: -0.05em;
+  background: var(--accent);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+.term-flipping .cursor { visibility: hidden; }
+
+.text-link {
+  display: inline-block;
+  padding: 12px 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+.section {
+  padding: 64px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--row-line);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  padding: 24px 0;
+  border-top: 1px solid var(--row-line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.row__label {
+  flex: 0 0 200px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.row__body {
+  flex: 1 1 420px;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row__title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.row__blurb {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+a.row:hover .row__title { color: var(--accent); }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  min-height: 168px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  transition: border-color 150ms;
+}
+
+.card:hover { border-color: var(--accent); }
+
+.card__tag {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--magenta);
+}
+
+.card__title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.card__desc {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.page-head {
+  padding: clamp(40px, 7vw, 88px) 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: clamp(40px, 7vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.page-lede {
+  margin: 0;
+  max-width: 640px;
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   Long-form markdown: Dew Drops posts, talk notes, project write-ups.
+   --------------------------------------------------------------------------- */
+
+.prose {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  overflow-wrap: break-word;
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 2.5rem 0 1rem;
+}
+
+.prose h1 { font-size: 1.75rem; }
+.prose h2 { font-size: 1.5rem; }
+.prose h3 { font-size: 1.25rem; }
+.prose p { margin: 0 0 1.25rem; }
+.prose strong { color: var(--ink); }
+
+.prose a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+.prose code {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.prose pre {
+  padding: 1rem;
+  margin: 0 0 1.25rem;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.prose pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* Quote rule carried over from the original site's post styles. */
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--ink);
+  font-style: italic;
+}
+
+.prose :where(ul, ol) {
+  margin: 0 0 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li { margin-bottom: 0.5rem; }
+.prose li::marker { color: var(--muted); }
+
+.prose hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Tables read like terminal output: mono, ruled rows, no boxes. */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose :where(th, td) {
+  padding: 0.5rem 1.5rem 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.prose th {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.prose td:first-child { color: var(--ink); }
+
+/* ---------------------------------------------------------------------------
+   Reduced motion: everything switches instantly.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation: none !important;
+  }
+}

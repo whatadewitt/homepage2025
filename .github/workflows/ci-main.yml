@@ -29,7 +29,11 @@ jobs:
       - name: Sync to S3
         uses: jakejarvis/s3-sync-action@v0.5.1
         with:
-          args: --delete # Deletes files from S3 that no longer exist locally
+          # --delete removes files from S3 that no longer exist locally. Other
+          # apps deploy into this bucket under their own paths (light-it-up's
+          # deploy-site.yml, /odds), so leave those alone; excluded paths are
+          # never deleted.
+          args: --delete --exclude 'light-it-up/*' --exclude 'odds/*'
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

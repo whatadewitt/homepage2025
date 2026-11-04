@@ -10,155 +10,97 @@ const { title, url } = Astro.props;
 const encodedTitle = encodeURIComponent(title);
 const encodedUrl = encodeURIComponent(url);
 
-// Create share URLs
-const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`;
-const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
-const facebookUrl = `https://www.facebook.com/sharer.php?u=${encodedUrl}`;
-const threadsUrl = `https://threads.net/intent/post?text=${encodedTitle}%20${encodedUrl}`;
-const blueskyUrl = `https://bsky.app/intent/compose?text=${encodedTitle}%20${encodedUrl}`;
+const targets = [
+  { label: "bluesky", name: "Bluesky", href: `https://bsky.app/intent/compose?text=${encodedTitle}%20${encodedUrl}` },
+  { label: "linkedin", name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+  { label: "threads", name: "Threads", href: `https://threads.net/intent/post?text=${encodedTitle}%20${encodedUrl}` },
+  { label: "x", name: "X (Twitter)", href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
+  { label: "facebook", name: "Facebook", href: `https://www.facebook.com/sharer.php?u=${encodedUrl}` },
+];
 ---
 
-<div class="share-buttons flex items-center gap-4">
-  <span class="text-sm text-stone-600 dark:text-indigo-200">Share:</span>
-  
-  <a
-    href={facebookUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="share-button hover:scale-110 transition-transform"
-    title="Share on Facebook"
-    aria-label="Share on Facebook"
-  >
-    <i class="fab fa-facebook text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </a>
-  
-  <a
-    href={blueskyUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="share-button hover:scale-110 transition-transform"
-    title="Share on Bluesky"
-    aria-label="Share on Bluesky"
-  >
-    <i class="fab fa-bluesky text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </a>
-  
-  <a
-    href={linkedinUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="share-button hover:scale-110 transition-transform"
-    title="Share on LinkedIn"
-    aria-label="Share on LinkedIn"
-  >
-    <i class="fab fa-linkedin text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </a>
-  
-  <a
-    href={threadsUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="share-button hover:scale-110 transition-transform"
-    title="Share on Threads"
-    aria-label="Share on Threads"
-  >
-    <i class="fab fa-threads text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </a>
-  
-  <a
-    href={twitterUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="share-button hover:scale-110 transition-transform"
-    title="Share on X (Twitter)"
-    aria-label="Share on X (Twitter)"
-  >
-    <i class="fab fa-x-twitter text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </a>
-  
-  <button
-    onclick="
-      const btn = event.currentTarget;
-      const icon = btn.querySelector('i');
-      const originalClass = icon.className;
-      const url = window.location.href;
-      
-      // Try modern clipboard API first
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          // Success - show checkmark
-          icon.className = 'fas fa-check text-xl text-green-600';
-          btn.title = 'Copied!';
-          
-          setTimeout(() => {
-            icon.className = originalClass;
-            btn.title = 'Copy link';
-          }, 2000);
-        }).catch(() => {
-          // Fallback if clipboard API fails
-          fallbackCopy(url, btn, icon, originalClass);
-        });
-      } else {
-        // Fallback for older browsers
-        fallbackCopy(url, btn, icon, originalClass);
-      }
-      
-      function fallbackCopy(text, button, iconEl, origClass) {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-          document.execCommand('copy');
-          // Success
-          iconEl.className = 'fas fa-check text-xl text-green-600';
-          button.title = 'Copied!';
-          
-          setTimeout(() => {
-            iconEl.className = origClass;
-            button.title = 'Copy link';
-          }, 2000);
-        } catch (err) {
-          // Show error state
-          iconEl.className = 'fas fa-exclamation text-xl text-red-600';
-          button.title = 'Copy failed';
-          
-          setTimeout(() => {
-            iconEl.className = origClass;
-            button.title = 'Copy link';
-          }, 2000);
-        }
-        
-        document.body.removeChild(textArea);
-      }
-    "
-    class="share-button hover:scale-110 transition-transform"
-    title="Copy link"
-    aria-label="Copy link to clipboard"
-  >
-    <i class="fas fa-link text-xl text-stone-600 dark:text-indigo-200 hover:text-violet-600 dark:hover:text-violet-400"></i>
-  </button>
+<div class="share">
+  <span class="share__label">share:</span>
+  <ul>
+    {
+      targets.map((t) => (
+        <li>
+          <a href={t.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${t.name}`}>
+            {t.label}
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <button type="button" data-copy-link>copy link</button>
+      <span class="sr" role="status" data-copy-status></span>
+    </li>
+  </ul>
 </div>
 
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy-link]").forEach((btn) => {
+    const status = btn.parentElement?.querySelector("[data-copy-status]");
+    const label = btn.textContent;
+    let timer: number | undefined;
+
+    const show = (text: string) => {
+      btn.textContent = text;
+      if (status) status.textContent = text;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        btn.textContent = label;
+        if (status) status.textContent = "";
+      }, 2000);
+    };
+
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        show("copied ✓");
+      } catch {
+        show("copy failed");
+      }
+    });
+  });
+</script>
+
 <style>
-  .share-button {
-    display: inline-flex;
+  .share {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
+    gap: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
   }
-  
-  .share-button i {
-    transition: color 0.2s;
+
+  .share__label {
+    color: var(--muted);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a,
+  button {
+    display: inline-block;
+    padding: 12px 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    text-decoration: underline;
   }
 </style>

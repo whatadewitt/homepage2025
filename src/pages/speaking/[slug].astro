@@ -1,0 +1,34 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import EntryLayout from "../../layouts/EntryLayout.astro";
+import { getDeck, getTalks, isoDate } from "../../lib/entries";
+
+export async function getStaticPaths() {
+  const talks = await getTalks();
+  return talks.map((talk) => ({ params: { slug: talk.id }, props: { talk } }));
+}
+
+const { talk } = Astro.props as { talk: CollectionEntry<"talks"> };
+const { Content } = await render(talk);
+const d = talk.data;
+const deck = getDeck(talk.id);
+---
+
+<EntryLayout
+  pageTitle={`${d.title} | Speaking | Luke DeWitt`}
+  title={d.title}
+  summary={d.summary}
+  path={`~/talks/${talk.id}.md`}
+  meta={[isoDate(d.date), d.event, ...(d.location ? [d.location] : [])]}
+  links={[]}
+  image={d.image}
+  imageAlt={d.imageAlt}
+  slides={d.slides}
+  deck={deck && { slug: talk.id, data: deck }}
+  video={d.video}
+  bodyPrompt="cat notes.md"
+  hasBody={!!talk.body?.trim()}
+  back={{ href: "/speaking", label: "all talks" }}
+>
+  <Content />
+</EntryLayout>

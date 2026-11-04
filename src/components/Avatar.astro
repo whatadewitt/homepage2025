@@ -1,0 +1,118 @@
+---
+// The head: an ASCII block (one per mode) under the photo. In full terminal
+// the ASCII types in line by line and the photo fades out. The ASCII renders
+// at a fixed 216x216 (36 cols x 20 rows of 10px mono) and is scaled to the
+// head's size, so one asset works at any size.
+import ascii from "../data/ascii-head.json";
+
+export interface Props {
+  size: "hero" | "nav";
+}
+
+const { size } = Astro.props;
+const isHero = size === "hero";
+const px = isHero ? 320 : 32;
+---
+
+<span
+  class:list={["avatar", `avatar--${size}`]}
+  data-hero-head={isHero ? "" : undefined}
+>
+  <span class="avatar__ascii" aria-hidden="true">
+    {
+      (["dark", "light"] as const).map((mode) => (
+        <span class:list={["ascii", `ascii--${mode}`]}>
+          {ascii[mode].map((runs, i) => (
+            <span class="ascii__line" style={`transition-delay: ${i * 28}ms`}>{runs.map(([text, color]) => color ? <span style={`color:${color}`}>{text}</span> : text)}</span>
+          ))}
+        </span>
+      ))
+    }
+  </span>
+  <img
+    class="avatar__photo"
+    src="/images/luke-head.png"
+    alt={isHero ? "Luke DeWitt" : ""}
+    width={px}
+    height={px}
+    decoding="async"
+  />
+</span>
+
+<style>
+  /* --ascii-scale is --size / 216px. */
+  .avatar--nav {
+    --size: 32px;
+    --ascii-scale: 0.1481;
+  }
+
+  /* Only shown on wide screens; below that the head lives in the header. */
+  .avatar--hero {
+    --size: 320px;
+    --ascii-scale: 1.4815;
+  }
+
+  .avatar {
+    position: relative;
+    display: block;
+    flex: 0 0 var(--size);
+    width: var(--size);
+    height: var(--size);
+  }
+
+  .avatar__ascii {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 216px;
+    height: 216px;
+    transform: translate(-50%, -50%) scale(var(--ascii-scale));
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.08;
+    color: var(--ink);
+  }
+
+  .ascii {
+    display: block;
+  }
+
+  :global([data-mode="dark"]) .ascii--light,
+  :global([data-mode="light"]) .ascii--dark {
+    display: none;
+  }
+
+  /* Thin strokes on a pale background barely show their color; bold gives
+     each character enough ink. */
+  .ascii--light {
+    font-weight: 700;
+  }
+
+  .ascii__line {
+    display: block;
+    width: 36ch;
+    height: 1.08em;
+    white-space: pre;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 90ms steps(9, end);
+  }
+
+  :global([data-term="on"]) .ascii__line {
+    clip-path: inset(0 0 0 0);
+  }
+
+  .avatar__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+    transition: opacity 350ms ease;
+  }
+
+  :global([data-term="on"]) .avatar__photo {
+    opacity: 0;
+    transition-delay: 220ms;
+  }
+</style>

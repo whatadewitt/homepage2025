@@ -2,151 +2,115 @@
 export interface Props {
   title: string;
   date: string;
+  slug: string;
   excerpt?: string;
   featuredImage?: string;
   featuredImageAlt?: string;
+  featuredImagePosition?: string;
 }
 
-const { title, date, excerpt, featuredImage, featuredImageAlt } = Astro.props;
+const {
+  title,
+  date,
+  slug,
+  excerpt,
+  featuredImage,
+  featuredImageAlt,
+  featuredImagePosition,
+} = Astro.props;
 import BaseLayout from "./BaseLayout.astro";
 import ShareButtons from "../components/ShareButtons.astro";
-
-// Parse date as local time to avoid timezone issues
-const [year, month, day] = date.split('-').map(num => parseInt(num));
-const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric'
-});
+import Split from "../components/Split.astro";
+import Cursor from "../components/Cursor.astro";
+import { formatPostDate } from "../lib/posts";
 ---
 
-<BaseLayout 
+<BaseLayout
   title={title + " | Dew Drops by Luke DeWitt | whatadewitt.com"}
-  description={excerpt ? excerpt : (title + " - A blog post by Luke DeWitt")}
+  description={excerpt ? excerpt : title + " - A blog post by Luke DeWitt"}
   {...(featuredImage && { ogImage: featuredImage })}
   publishDate={date}
-  layout="blog"
+  ogType="article"
 >
-  <div>
-    <article class="prose prose-lg dark:prose-invert max-w-none">
-      <header class="mb-8">
-        <h1 class="text-3xl sm:text-4xl font-bold mb-4" style="color: var(--text-color);">
-          {title}
-        </h1>
-        <time 
-          datetime={date}
-          class="text-stone-600 dark:text-indigo-200 text-sm"
-        >
-          {formattedDate}
-        </time>
-        {excerpt && (
-          <p class="mt-4 text-lg text-stone-600 dark:text-indigo-200 italic">
-            {excerpt}
-          </p>
-        )}
-      </header>
-      
-      {featuredImage && (
-        <div class="mb-8">
-          <img 
-            src={featuredImage} 
-            alt={featuredImageAlt || title}
-            class="w-full h-64 sm:h-80 object-cover rounded-lg shadow-lg"
-          />
-        </div>
-      )}
-      
-      <div class="content text-stone-700 dark:text-indigo-100 leading-relaxed">
-        <slot />
-      </div>
-      
-      <!-- Share buttons -->
-      <div class="mt-12 pt-8" style="border-top: 1px solid rgba(0, 0, 0, 0.1);">
-        <ShareButtons 
-          title={title}
-          url={Astro.url.href}
+  <article class="post">
+    <header class="page-head post__head">
+      <p class="prompt-line">
+        <span class="prompt">$</span> cat <span class="t-arg">dew-drops/{slug}.md</span>
+      </p>
+      <h1 class="post__title"><Split text={title} start={0} /><Cursor /></h1>
+      <p class="post__meta">
+        <time class="date" datetime={date}>{formatPostDate(date)}</time>
+      </p>
+      {excerpt && <p class="page-lede"><Split text={excerpt} start={60} /></p>}
+    </header>
+
+    {
+      featuredImage && (
+        <img
+          class="post__image"
+          src={featuredImage}
+          alt={featuredImageAlt || title}
+          style={`object-position: ${featuredImagePosition ?? "center"}`}
         />
-      </div>
-    </article>
-  </div>
+      )
+    }
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    <footer class="post__foot">
+      <ShareButtons title={title} url={Astro.url.href} />
+      <a href="/dew-drops" class="text-link">← all drops</a>
+    </footer>
+  </article>
 </BaseLayout>
 
 <style>
-  .content :global(h1),
-  .content :global(h2),
-  .content :global(h3),
-  .content :global(h4),
-  .content :global(h5),
-  .content :global(h6) {
-    color: var(--text-color);
-    font-weight: 600;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .content :global(h2) {
-    font-size: 1.5rem;
-  }
-  
-  .content :global(h3) {
-    font-size: 1.25rem;
-  }
-  
-  .content :global(p) {
-    margin-bottom: 1rem;
-  }
-  
-  .content :global(a) {
-    color: var(--primary-color);
-    text-decoration: none;
-  }
-  
-  .content :global(a:hover) {
-    text-decoration: underline;
-  }
-  
-  .content :global(code) {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    font-family: var(--font-mono-jetbrains);
-  }
-  
-  html.dark .content :global(code) {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .content :global(pre) {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin-bottom: 1rem;
-  }
-  
-  html.dark .content :global(pre) {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  .content :global(blockquote) {
-    border-left: 4px solid var(--primary-color);
-    padding-left: 1rem;
-    font-style: italic;
-    margin: 1rem 0;
-  }
-  
-  .content :global(ul),
-  .content :global(ol) {
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-  }
-  
-  .content :global(li) {
-    margin-bottom: 0.5rem;
+  .post {
+    max-width: 720px;
+    padding-bottom: 96px;
   }
 
-  .content :global(hr) {
-    margin-bottom: 1rem;
+  .post__head {
+    padding-bottom: 24px;
+  }
+
+  .post__title {
+    margin: 0;
+    font-size: clamp(34px, 5.5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    font-weight: 700;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .post__meta {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .post__image {
+    display: block;
+    width: 100%;
+    height: clamp(200px, 40vw, 360px);
+    object-fit: cover;
+    margin-bottom: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+
+  .post__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
   }
 </style>

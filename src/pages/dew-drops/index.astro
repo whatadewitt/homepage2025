@@ -1,104 +1,198 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Split from "../../components/Split.astro";
+import Cursor from "../../components/Cursor.astro";
+import { getPosts } from "../../lib/posts";
 
-// Get all blog posts
-const allPosts = await Astro.glob("../../content/blog/*.md");
-
-// Filter out template files (those starting with _)
-const blogPosts = allPosts.filter(post => {
-  const filename = post.file.split('/').pop();
-  return filename && !filename.startsWith('_');
-});
-
-// Sort by date (newest first)
-const sortedPosts = blogPosts
-  .sort(
-    (a, b) =>
-      new Date(b.frontmatter.date).getTime() -
-      new Date(a.frontmatter.date).getTime()
-  )
-  .map((post) => ({
-    ...post,
-    slug: post.file.split("/").pop()?.replace(".md", "") || "",
-  }));
+const [latest, ...older] = getPosts();
 ---
 
-<BaseLayout 
+<BaseLayout
   title="Dew Drops by Luke DeWitt | whatadewitt.com"
-  description="Condensed thoughts. Occasional precipitation."
-  layout="blog"
+  description="Condensed thoughts, occasionally spilling out."
 >
-  <div>
-    <p class="text-stone-600 dark:text-indigo-200 mb-8">
-      Condensed thoughts. Occasional precipitation.
+  <header class="page-head">
+    <p class="prompt-line">
+      <span class="prompt">$</span> ls <span class="t-arg">~/dew-drops</span>
     </p>
+    <h1 class="page-title"><Split text="Dew Drops" start={0} /><Cursor /></h1>
+    <p class="page-lede">
+      <Split text="Condensed thoughts, occasionally spilling out." start={40} />
+    </p>
+  </header>
 
-    {
-      sortedPosts.length === 0 ? (
-        <div class="text-center py-12">
-          <p class="text-stone-600 dark:text-indigo-200 text-lg">
-            No drops yet! Check back soon.
-          </p>
-        </div>
-      ) : (
-        <div class="space-y-8">
-          {sortedPosts.map((post) => {
-            // Parse date as local time to avoid timezone issues
-            const [year, month, day] = post.frontmatter.date.split('-').map(num => parseInt(num));
-            const formattedDate = new Date(year, month - 1, day).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            });
+  {
+    !latest ? (
+      <p class="empty">No drops yet! Check back soon.</p>
+    ) : (
+      <div class="drops">
+        <a href={`/dew-drops/${latest.slug}`} class="feature">
+          {latest.frontmatter.featuredImage && (
+            <img
+              class="feature__image"
+              src={latest.frontmatter.featuredImage}
+              alt=""
+              decoding="async"
+              style={`object-position: ${latest.frontmatter.featuredImagePosition ?? "center"}`}
+            />
+          )}
+          <span class="feature__body">
+            <span class="feature__meta">
+              <span class="feature__badge">latest</span>
+              <time class="date" datetime={latest.frontmatter.date}>
+                {latest.frontmatter.date}
+              </time>
+            </span>
+            <span class="feature__title">
+              <Split text={latest.frontmatter.title} start={80} />
+            </span>
+            {latest.frontmatter.excerpt && (
+              <span class="feature__excerpt">
+                <Split text={latest.frontmatter.excerpt} start={120} />
+              </span>
+            )}
+            <span class="feature__more">read →</span>
+          </span>
+        </a>
 
-            return (
-              <article class="pb-8 last:border-b-0" style="border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                <h3 class="text-xl font-semibold mb-2">
-                  <a
-                    href={`/dew-drops/${post.slug}`}
-                    class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors" style="color: var(--text-color);"
-                  >
-                    {post.frontmatter.title}
-                  </a>
-                </h3>
-
-                <time
-                  datetime={post.frontmatter.date}
-                  class="text-sm text-stone-600 dark:text-indigo-200 mb-3 block"
-                >
-                  {formattedDate}
-                </time>
-
-                {post.frontmatter.featuredImage && (
-                  <div class="mb-4">
-                    <img
-                      src={post.frontmatter.featuredImage}
-                      alt={
-                        post.frontmatter.featuredImageAlt ||
-                        post.frontmatter.title
-                      }
-                      style={`width: 100%; height: 8rem; object-fit: cover; object-position: ${post.frontmatter.featuredImagePosition || "center"}; border-radius: 0.5rem;`}
-                    />
-                  </div>
-                )}
-
-                {post.frontmatter.excerpt && (
-                  <p class="text-stone-600 dark:text-indigo-200 leading-relaxed mb-4">
-                    {post.frontmatter.excerpt}
-                  </p>
-                )}
-
-                <a
-                  href={`/dew-drops/${post.slug}`}
-                  class="text-violet-600 dark:text-violet-400 hover:underline text-sm font-medium"
-                >
-                  Read more →
-                </a>
-              </article>
-            );
-          })}
-        </div>
-      )
-    }
-  </div>
+        {older.length > 0 && (
+          <section aria-labelledby="older-heading" class="older">
+            <h2 id="older-heading" class="prompt-line">
+              <span class="prompt">$</span> ls <span class="t-flag">-t</span>{" "}
+              <span class="t-arg">~/dew-drops</span> <span class="t-op">|</span> tail{" "}
+              <span class="t-flag">-n +2</span>
+            </h2>
+            <ul class="rows">
+              {older.map((post, i) => {
+                const start = Math.min(200 + i * 40, 420);
+                return (
+                  <li>
+                    <a href={`/dew-drops/${post.slug}`} class="row">
+                      <time class="row__label date" datetime={post.frontmatter.date}>
+                        {post.frontmatter.date}
+                      </time>
+                      <span class="row__body">
+                        <span class="row__title">
+                          <Split text={post.frontmatter.title} start={start} />
+                        </span>
+                        {post.frontmatter.excerpt && (
+                          <span class="row__blurb">
+                            <Split text={post.frontmatter.excerpt} start={start + 30} />
+                          </span>
+                        )}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+      </div>
+    )
+  }
 </BaseLayout>
+
+<style>
+  .drops {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    padding-bottom: 96px;
+  }
+
+  .empty {
+    color: var(--muted);
+  }
+
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    transition: border-color 150ms;
+  }
+
+  .feature:hover {
+    border-color: var(--accent);
+  }
+
+  .feature__image {
+    display: block;
+    width: 100%;
+    height: clamp(200px, 40vw, 300px);
+    object-fit: cover;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .feature__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: clamp(24px, 4vw, 40px);
+  }
+
+  .feature__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .feature__badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+
+  .feature__title {
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .feature__excerpt {
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .feature__more {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  @media (min-width: 860px) {
+    .feature {
+      grid-template-columns: 1.1fr 1fr;
+    }
+
+    .feature__image {
+      height: 100%;
+      min-height: 340px;
+      border-bottom: 0;
+      border-right: 1px solid var(--line);
+    }
+
+    .feature__body {
+      justify-content: center;
+    }
+  }
+
+  .older {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+</style>

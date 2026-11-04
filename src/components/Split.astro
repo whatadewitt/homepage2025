@@ -1,0 +1,44 @@
+---
+// Splits text into per-character spans for the full-terminal font flip.
+// Delays (--d) run from `start` to start + 420ms. --cur is how long the
+// sweeping cursor sits on each character; it rests a little longer on the
+// last one. Screen readers get the real string from the visually hidden copy;
+// the character spans are aria-hidden.
+//
+// `typed` also gives each character a --t: when it appears in the type-in
+// intro (see .type-intro in global.css). Gaps vary a little and pause after a
+// space, so it reads like someone typing.
+export interface Props {
+  text: string;
+  /** Start offset in ms; cascade these down the page. */
+  start?: number;
+  typed?: boolean;
+}
+
+const SPAN = 420;
+const TYPE_START = 350;
+const TYPE_GAPS = [95, 70, 110, 80, 100, 75];
+const { text, start = 0, typed = false } = Astro.props;
+const chars = Array.from(text);
+const step = SPAN / Math.max(chars.length, 1);
+const cur = Math.max(Math.round(step * 1.2), 17);
+const last = chars.length - 1;
+
+let t = TYPE_START;
+const typeAt = chars.map((c, i) => {
+  const at = t;
+  t += TYPE_GAPS[i % TYPE_GAPS.length] + (c === " " ? 140 : 0);
+  return at;
+});
+
+const style = (i: number) =>
+  [
+    `--d:${Math.round(start + i * step)}ms`,
+    i === last && "--cur:160ms",
+    typed && `--t:${typeAt[i]}ms`,
+  ]
+    .filter(Boolean)
+    .join(";");
+---
+
+<span class="sr">{text}</span><span class="split" aria-hidden="true" style={`--cur:${cur}ms`}>{chars.map((c, i) => <span class="ch" style={style(i)}>{c}</span>)}</span>

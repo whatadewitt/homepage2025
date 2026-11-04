@@ -1,0 +1,34 @@
+{
+  "width": 1440,
+  "height": 1080,
+  "widths": [
+    720,
+    1440
+  ],
+  "pdf": "/talks/ssr-react-with-php.pdf",
+  "alts": [
+    "REACT SERVER SIDE RENDERING WITH PHP I DON’T KNOW WHY EITHER",
+    "REACT ▸Enough said…",
+    "SSR ▸Server side rendering ▸As long as I can remember, people have been in love with the idea of rendering React Server Side ▸Some obvious benefits with regards to speed, FOUC, UX",
+    "SSR REACT - HOW? ▸Using the React DOM module",
+    "SSR REACT - HOW? ▸Using the React DOM module ▸… kind of…",
+    "REACT DOM SERVER ▸Included in the React DOM module ▸import { ReactDOMServer } from “react-dom/server” ▸Use this module in NodeJS to render React Content on the server",
+    "REACT DOM SERVER ▸renderToString(elem) ▸Render a React element to its initial HTML. ▸Links into your React app when JS is loaded. ▸renderToStaticMarkup(elem) ▸Similar to above, won’t hook into React. ▸renderToNodeStream(elem) ▸Returns a Readable stream that outputs an HTML string. ▸The stream returned from this method will return a byte stream encoded in utf-8.",
+    "POOR EXAMPLE",
+    "SSR REACT ▸So now we have an idea…",
+    "SSR REACT ▸So now we have an idea… ▸… and I had an idea…",
+    "PHP ▸More than enough said…",
+    "SSR REACT ▸I remember reading that it was possible… ▸But how?",
+    "V8JS ▸V8 JavaScript engine for PHP ▸Embeds Google V8 Engine ▸Use PECL to install ▸Enable in your php.ini file",
+    "SO… ▸It kind of writes itself from here…",
+    "SSR REACT ▸Use V8 Engine to render your React app on the PHP server ▸Spit it out to the browser",
+    "I’M OUT",
+    "NAH",
+    "CODE - SIMPLE REACT APP",
+    "CODE: SIMPLE REACT APP",
+    "CODE - GETTING REACT READY ▸Need to expose React (and associated pieces) globally ▸“Hydrate” your React app ▸Be wary of your plugins ▸“BrowserRouter” doesn’t work server side, make sure you’re aware of these nuances",
+    "CODE: RENDERING SERVER SIDE",
+    "THOUGHTS ▸A lot of work for… what? ▸SEO Concerns ▸componentDidMount XHR ▸Maybe use for headers, navs, page structure and let the requests happen? ▸Maybe for more “dynamic” content ▸Storing state as a whole",
+    "THANKS, Y’ALL!!"
+  ]
+}

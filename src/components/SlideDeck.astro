@@ -1,0 +1,226 @@
+---
+// A talk's slides as a row of images you swipe (or arrow) through. Only the
+// row scrolls sideways, never the page. Images and alt text come from
+// scripts/talk-slides.py; the next slide peeks in so it reads as swipeable.
+import type { Deck } from "../lib/entries";
+
+export interface Props {
+  slug: string;
+  title: string;
+  deck: Deck;
+}
+
+const { slug, title, deck } = Astro.props;
+const count = deck.alts.length;
+const src = (i: number, w: number) =>
+  `/talks/${slug}/${String(i + 1).padStart(3, "0")}-${w}.webp`;
+const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(", ");
+---
+
+<div class="deck" data-deck>
+  <ol
+    class="deck__track"
+    tabindex="0"
+    aria-label={`Slides: ${title}`}
+    data-deck-track
+  >
+    {
+      deck.alts.map((alt, i) => (
+        <li class="deck__slide" aria-label={`${i + 1} of ${count}`}>
+          <img
+            src={src(i, deck.width)}
+            srcset={srcset(i)}
+            sizes="(min-width: 800px) 760px, 100vw"
+            width={deck.width}
+            height={deck.height}
+            alt={alt}
+            loading={i < 2 ? "eager" : "lazy"}
+            decoding="async"
+          />
+        </li>
+      ))
+    }
+  </ol>
+  <div class="deck__bar">
+    {
+      count > 1 && (
+        <div class="deck__nav">
+          <button type="button" class="ctrl" aria-label="Previous slide" data-deck-prev disabled>
+            ←
+          </button>
+          <span class="deck__count">
+            <span data-deck-current>1</span> / {count}
+          </span>
+          <button type="button" class="ctrl" aria-label="Next slide" data-deck-next>
+            →
+          </button>
+        </div>
+      )
+    }
+    <a href={deck.pdf} class="text-link" download>download pdf ↓</a>
+  </div>
+</div>
+
+<style>
+  .deck {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .deck__track {
+    /* Slides' offsetLeft is measured from the row (see the script). */
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    /* The next slide peeks in; one slide alone fills the row. */
+    grid-auto-columns: calc(100% - 32px);
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* The counter shows position; a scrollbar would sit over the slides. */
+    scrollbar-width: none;
+    border-radius: 8px;
+  }
+
+  .deck__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .deck__track:has(> :only-child) {
+    grid-auto-columns: 100%;
+  }
+
+  .deck__track:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  .deck__slide {
+    scroll-snap-align: start;
+  }
+
+  .deck__slide img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .deck__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
+  .deck__nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .deck__nav .ctrl {
+    justify-content: center;
+    padding: 0;
+    font-size: 16px;
+  }
+
+  .deck__nav .ctrl:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .deck__count {
+    min-width: 7ch;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .deck__track {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-deck]").forEach((deck) => {
+    const track = deck.querySelector<HTMLElement>("[data-deck-track]")!;
+    const slides = Array.from(track.children) as HTMLElement[];
+    const prev = deck.querySelector<HTMLButtonElement>("[data-deck-prev]");
+    const next = deck.querySelector<HTMLButtonElement>("[data-deck-next]");
+    const current = deck.querySelector<HTMLElement>("[data-deck-current]");
+    if (slides.length < 2) return;
+
+    // The slide whose left edge is closest to the row's.
+    const index = () => {
+      const left = track.scrollLeft;
+      let best = 0;
+      slides.forEach((s, i) => {
+        if (Math.abs(s.offsetLeft - left) < Math.abs(slides[best].offsetLeft - left)) best = i;
+      });
+      // Scrolled to the end: the last slide may not reach the left edge.
+      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 2) best = slides.length - 1;
+      return best;
+    };
+
+    const show = (i: number) => {
+      if (current) current.textContent = String(i + 1);
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === slides.length - 1;
+    };
+
+    // While a button or key scroll is underway, `heading` is where it's going,
+    // so quick repeat presses keep counting from there, not from mid-scroll.
+    let heading: number | null = null;
+    let settle = 0;
+    const go = (i: number) => {
+      heading = Math.max(0, Math.min(slides.length - 1, i));
+      show(heading);
+      track.scrollTo({ left: slides[heading].offsetLeft });
+      clearTimeout(settle);
+      settle = window.setTimeout(() => (heading = null), 700);
+    };
+    const from = () => heading ?? index();
+
+    let frame = 0;
+    track.addEventListener(
+      "scroll",
+      () => {
+        if (heading !== null) return;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => show(index()));
+      },
+      { passive: true }
+    );
+    track.addEventListener("scrollend", () => {
+      heading = null;
+      show(index());
+    });
+    // A swipe or drag takes over from any button scroll.
+    track.addEventListener("pointerdown", () => (heading = null));
+
+    prev?.addEventListener("click", () => go(from() - 1));
+    next?.addEventListener("click", () => go(from() + 1));
+    track.addEventListener("keydown", (e) => {
+      const step = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      const jump = { Home: 0, End: slides.length - 1 }[e.key];
+      if (step === undefined && jump === undefined) return;
+      e.preventDefault();
+      go(jump ?? from() + step!);
+    });
+  });
+</script>

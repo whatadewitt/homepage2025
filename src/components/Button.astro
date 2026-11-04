@@ -1,0 +1,40 @@
+---
+// A link styled as a button. On hover/focus the label swaps for the shell
+// command it "runs", with a blinking caret.
+import Split from "./Split.astro";
+
+export interface Props {
+  href: string;
+  label: string;
+  /** Shown on hover, after a "$ " prompt, e.g. "cd ~/dew-drops". */
+  cmd: string;
+  variant?: "primary" | "secondary";
+  /** Start offset for the full-terminal font flip. */
+  start?: number;
+  arrow?: boolean;
+}
+
+const {
+  href,
+  label,
+  cmd,
+  variant = "primary",
+  start = 0,
+  arrow = false,
+} = Astro.props;
+const external = /^https?:/.test(href);
+---
+
+<a
+  href={href}
+  class:list={["btn", `btn--${variant}`]}
+  target={external ? "_blank" : undefined}
+  rel={external ? "noopener noreferrer" : undefined}
+>
+  <span class="btn__face">
+    <span class="btn__label">
+      <Split text={label} start={start} />{arrow && <span aria-hidden="true"> →</span>}{external && <span class="sr"> (opens in a new tab)</span>}
+    </span>
+    <span class="btn__cmd" aria-hidden="true">$ {cmd}<span class="btn__caret"></span></span>
+  </span>
+</a>
