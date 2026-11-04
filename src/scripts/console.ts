@@ -1,6 +1,9 @@
 // The docked terminal in full terminal mode: the site as folders to cd, ls,
 // cat and open. Scrollback and history live in sessionStorage, so `open`
 // moves to a new page with the terminal still open and the session intact.
+// Pages reached any other way (nav, links) are logged as the cd and open
+// that would have got you there, so the session reads as your path through
+// the site.
 
 import { CONSOLE_KEY } from "../data/themes";
 import type { FsDir, FsFile } from "../lib/sitefs";
@@ -28,6 +31,9 @@ function setup(panel: HTMLElement) {
     history: string[];
     /** Set by `open` so the next page puts you back at the prompt. */
     focus: boolean;
+    cwd: string[];
+    /** The page already in the log: this one on a refresh, or where `open` went. */
+    last: string;
   }
 
   const SCROLLBACK = 200;
@@ -41,6 +47,15 @@ function setup(panel: HTMLElement) {
   let historyAt = history.length;
   let focusNext = false;
 
+  const normalize = (p: string) => p.replace(/\/+$/, "") || "/";
+  const page = normalize(location.pathname);
+  let last = page;
+
+  function remember(text: string) {
+    if (history.at(-1) !== text) history.push(text);
+    historyAt = history.length;
+  }
+
   function save() {
     while (out.childElementCount > SCROLLBACK) out.firstElementChild!.remove();
     try {
@@ -51,6 +66,8 @@ function setup(panel: HTMLElement) {
           out: out.innerHTML,
           history: history.slice(-100),
           focus: focusNext,
+          cwd,
+          last,
         } satisfies Saved)
       );
     } catch {
@@ -79,12 +96,18 @@ function setup(panel: HTMLElement) {
   // The nav says "speaking"; the pages print ~/talks. Answer to both.
   const ALIASES: Record<string, string> = { speaking: "talks" };
 
+  const FOLDERS = ["dew-drops", "projects", "talks"];
+
   /** cwd is [] for ~ or [folder]. */
-  let cwd: string[] = [];
-  {
-    const top = location.pathname.split("/")[1] ?? "";
-    const name = ALIASES[top] ?? top;
-    if (["dew-drops", "projects", "talks"].includes(name)) cwd = [name];
+  let cwd: string[] = saved.cwd ?? [];
+
+  /** Folder and file for a site path, or null for one that isn't in the fs. */
+  function locate(path: string): { dir?: string; file?: string } | null {
+    if (path === "/") return {};
+    const [, top, file, extra] = path.split("/");
+    const dir = ALIASES[top] ?? top;
+    if (!FOLDERS.includes(dir) || extra) return null;
+    return file ? { dir, file } : { dir };
   }
 
   interface Node {
@@ -237,6 +260,7 @@ function setup(panel: HTMLElement) {
       }
       print("c-muted", `opening ${href}…`);
       focusNext = true;
+      last = href;
       save();
       location.assign(href);
     },
@@ -273,9 +297,9 @@ function setup(panel: HTMLElement) {
   async function run(raw: string) {
     echoCommand(raw);
     const text = raw.trim();
-    if (text && history.at(-1) !== text) history.push(text);
     historyAt = history.length;
     if (text) {
+      remember(text);
       const [name, ...args] = text.split(/\s+/);
       if (!Object.hasOwn(commands, name)) {
         print("c-err", `command not found: ${name}`);
@@ -418,15 +442,49 @@ function setup(panel: HTMLElement) {
     setOpen(true);
   });
 
+  // --- Page visits -----------------------------------------------------------
+
+  /** Write this page into the session as if it had been typed. */
+  function logVisit() {
+    if (saved.last === page) return;
+    if (!out.childElementCount) welcome();
+    const typed = (cmd: string) => {
+      echoCommand(cmd);
+      remember(cmd);
+    };
+    const at = locate(page);
+    if (!at) {
+      typed(`open ${page}`);
+      print("c-err", `open: ${page}: No such file or directory`);
+      return;
+    }
+    const target = at.dir ? [at.dir] : [];
+    if (target.join() !== cwd.join()) {
+      typed(`cd ${!at.dir ? "~" : cwd.length ? `../${at.dir}` : at.dir}`);
+      cwd = target;
+    }
+    typed(`open ${at.file ? `${at.file}.md` : "."}`);
+    print("c-muted", `opening ${page}…`);
+  }
+
+  // Turning on full terminal brings the terminal up, history and all.
+  new MutationObserver(() => {
+    if (root.dataset.term === "on") setOpen(true);
+    else if (panel.contains(document.activeElement)) {
+      document.querySelector<HTMLElement>("[data-term-switch]")?.focus();
+    }
+  }).observe(root, { attributes: true, attributeFilter: ["data-term"] });
+
   // --- Restore ---------------------------------------------------------------
 
-  syncPrompt();
   if (saved.out) out.innerHTML = saved.out;
+  logVisit();
+  syncPrompt();
   if (isOpen()) {
     launcher.setAttribute("aria-expanded", "true");
     loadFs();
     scrollDown();
     if (saved.focus && root.dataset.term === "on") input.focus({ preventScroll: true });
-    save();
   }
+  save();
 }
