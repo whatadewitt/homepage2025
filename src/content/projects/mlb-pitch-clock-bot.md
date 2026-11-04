@@ -5,6 +5,11 @@ blurb: "Tracking every pitch clock violation, until Twitter's API paywall."
 summary: "A Twitter bot, written in Go, that tracked MLB pitch clock violations in the clock's first season."
 order: 8
 source: "https://github.com/whatadewitt/mlbviolations"
+image: "/images/clock.jpg"
+imageAlt: "An outfield pitch clock reading 00, with empty seats behind it"
+# Both crops are wide; keep the clock, not the seats.
+imagePosition: "50% 70%"
+thumbnailPosition: "50% 70%"
 ---
 
 2023 brought the pitch clock to MLB, and I wanted to see how often players were

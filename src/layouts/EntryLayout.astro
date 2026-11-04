@@ -20,6 +20,7 @@ export interface Props {
   links: { href: string; label: string }[];
   image?: string;
   imageAlt?: string;
+  imagePosition?: string;
   slides?: string;
   /** Slide images to swipe through; used instead of `slides` when present. */
   deck?: { slug: string; data: Deck };
@@ -40,6 +41,7 @@ const {
   links,
   image,
   imageAlt,
+  imagePosition,
   slides,
   deck,
   video,
@@ -118,7 +120,12 @@ const allLinks = [
         </div>
       ) : (
         image && (
-          <img class="entry__image" src={image} alt={imageAlt ?? ""} />
+          <img
+            class="entry__image"
+            src={image}
+            alt={imageAlt ?? ""}
+            style={imagePosition && `object-position: ${imagePosition}`}
+          />
         )
       )
     }

@@ -22,6 +22,8 @@ const entry = {
   summary: z.string(),
   image: z.string().optional(),
   imageAlt: z.string().optional(),
+  /** CSS object-position for the page image, e.g. "top" or "50% 65%". */
+  imagePosition: z.string().optional(),
   slides: z.string().optional(),
   video: z.string().url().optional(),
 };
