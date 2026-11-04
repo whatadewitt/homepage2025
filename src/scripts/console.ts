@@ -255,9 +255,10 @@ function setup(panel: HTMLElement) {
       const node = resolve(target);
       if (!node) return void print("c-err", `open: ${target}: No such file or directory`);
       const href = node.file?.href ?? node.dir?.href ?? "/";
-      if ((location.pathname.replace(/\/$/, "") || "/") === href) {
-        return void print("c-muted", "you’re already here");
-      }
+      // The prompt follows you to the folder of the page you open.
+      cwd = node.dir ? [node.dir.name] : [];
+      syncPrompt();
+      if (page === href) return void print("c-muted", "you’re already here");
       print("c-muted", `opening ${href}…`);
       focusNext = true;
       last = href;
