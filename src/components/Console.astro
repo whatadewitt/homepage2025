@@ -28,7 +28,7 @@
     <div class="console__out" role="log" aria-live="polite" data-console-out></div>
     <form class="console__line" data-console-form>
       <label for="console-input" class="c-prompt" data-console-prompt>
-        <span class="c-host">visitor@whatadewitt:</span><span class="c-path">~</span>$
+        <span class="c-sh"><span class="c-host">visitor@whatadewitt:</span><span class="c-path">~</span>$</span><span class="c-cc">&gt;</span>
       </label>
       <input
         id="console-input"
@@ -110,6 +110,52 @@
     :global(html.console-anim) .console {
       transition: none;
     }
+  }
+
+  /* The `claude` easter egg (scripts/console.ts): orange, a > prompt. */
+  .console {
+    --claude: #D97757;
+  }
+
+  :global([data-mode="light"]) .console {
+    --claude: #B4532F;
+  }
+
+  .c-cc {
+    display: none;
+    color: var(--claude);
+  }
+
+  .console.is-claude .c-sh {
+    display: none;
+  }
+
+  .console.is-claude .c-cc {
+    display: inline;
+  }
+
+  .console__out :global(.c-banner) {
+    max-width: 56ch;
+    margin: 4px 0 12px;
+    padding: 8px 14px;
+    border: 1px solid var(--claude);
+    border-radius: 8px;
+  }
+
+  .console__out :global(.c-star) {
+    color: var(--claude);
+  }
+
+  .console__out :global(.c-you) {
+    margin-top: 12px;
+    color: var(--muted);
+  }
+
+  /* Wrapped lines hang past the ⏺, like Claude Code. */
+  .console__out :global(.c-reply) {
+    margin-bottom: 4px;
+    padding-left: 2ch;
+    text-indent: -2ch;
   }
 
   .console__bar {

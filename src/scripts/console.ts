@@ -23,6 +23,7 @@ function setup(panel: HTMLElement) {
   const form = q<HTMLFormElement>("[data-console-form]");
   const input = q<HTMLInputElement>("[data-console-input]");
   const promptPath = q("[data-console-prompt] .c-path");
+  const promptTitle = () => `visitor@whatadewitt: ${here()}`;
 
   // --- Session ---------------------------------------------------------------
 
@@ -156,7 +157,7 @@ function setup(panel: HTMLElement) {
 
   function syncPrompt() {
     promptPath.textContent = here();
-    title.textContent = `visitor@whatadewitt: ${here()}`;
+    title.textContent = claudeTurns < 0 ? promptTitle() : `✻ claude — ${here()}`;
   }
 
   // --- Output ----------------------------------------------------------------
@@ -325,6 +326,10 @@ function setup(panel: HTMLElement) {
     sudo() {
       print("c-err", "visitor is not in the sudoers file. This incident will be reported.");
     },
+
+    claude() {
+      enterClaude();
+    },
   };
 
   async function run(raw: string) {
@@ -385,6 +390,86 @@ function setup(panel: HTMLElement) {
     }
   }
 
+  // --- claude: a Claude Code session that isn't ------------------------------
+  // Everything but exit "thinks" (long the first time, quick after), then
+  // gets the next of these, the last on repeat.
+
+  const REPLIES = [
+    "you’re crazy if you think I’ve actually integrated a real claude code session into this site... i think you should just shut this easter egg down...",
+    "seriously, this isn’t going to work",
+    "you’re not listening, this isn’t working... just type exit and go back to the fake terminal and try running doom or something...",
+  ];
+  const SPINNER = ["·", "✢", "✳", "✶", "✻", "✽", "✻", "✶", "✳", "✢"];
+  const VERBS = ["Thinking", "Pondering", "Noodling", "Clauding", "Percolating", "Ruminating", "Cogitating"];
+
+  /** Replies given so far; -1 when not in claude. */
+  let claudeTurns = -1;
+  /** Stops the spinner early (esc), while it's thinking. */
+  let interrupt: (() => void) | undefined;
+
+  function setClaude(on: boolean) {
+    claudeTurns = on ? 0 : -1;
+    panel.classList.toggle("is-claude", on);
+    syncPrompt();
+  }
+
+  function enterClaude() {
+    setClaude(true);
+    const box = print("c-banner");
+    const head = document.createElement("p");
+    head.append(span("c-star", "✻"), " Welcome to ", span("c-title", "Claude Code"), "!");
+    const cwdLine = document.createElement("p");
+    cwdLine.className = "c-muted";
+    cwdLine.textContent = `cwd: ${["/home/visitor", ...cwd].join("/")}`;
+    box.append(head, cwdLine);
+  }
+
+  /** The spinner line; resolves true when it ran its course, false if esc'd. */
+  function think(ms: number) {
+    return new Promise<boolean>((done) => {
+      const star = span("c-star", SPINNER[0]);
+      const meta = span("c-muted", "(0s · esc to interrupt)");
+      const verb = VERBS[Math.floor(Math.random() * VERBS.length)];
+      print().append(star, ` ${verb}…  `, meta);
+      scrollDown();
+      const started = performance.now();
+      let frame = 0;
+      const tick = setInterval(() => {
+        star.textContent = SPINNER[++frame % SPINNER.length];
+        meta.textContent = `(${Math.floor((performance.now() - started) / 1000)}s · esc to interrupt)`;
+      }, 120);
+      const finish = (ran: boolean) => {
+        clearInterval(tick);
+        clearTimeout(timer);
+        interrupt = undefined;
+        star.parentElement!.remove();
+        done(ran);
+      };
+      const timer = setTimeout(() => finish(true), ms);
+      interrupt = () => finish(false);
+    });
+  }
+
+  async function claudeTurn(raw: string) {
+    const text = raw.trim();
+    print("c-you", `> ${raw}`);
+    if (text === "exit" || text === "/exit") {
+      setClaude(false);
+    } else if (text) {
+      input.readOnly = true;
+      if (await think(claudeTurns === 0 ? 3600 : 900)) {
+        const reply = print("c-reply");
+        reply.append("⏺ ", REPLIES[Math.min(claudeTurns, REPLIES.length - 1)]);
+        claudeTurns++;
+      } else {
+        print("c-err", "  ⎿  Interrupted by user");
+      }
+      input.readOnly = false;
+    }
+    save();
+    scrollDown();
+  }
+
   // --- Open and close --------------------------------------------------------
 
   const isOpen = () => root.classList.contains("console-open");
@@ -423,22 +508,26 @@ function setup(panel: HTMLElement) {
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (interrupt) return;
     const value = input.value;
     input.value = "";
-    run(value);
+    if (claudeTurns >= 0) claudeTurn(value);
+    else run(value);
   });
 
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Tab" && !e.shiftKey) {
+    if (e.key === "Escape" && interrupt) {
+      interrupt();
+    } else if (e.key === "Tab" && !e.shiftKey) {
       e.preventDefault();
-      loadFs().then(complete);
+      if (claudeTurns < 0) loadFs().then(complete);
     } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
       historyAt = Math.max(0, Math.min(history.length, historyAt + (e.key === "ArrowUp" ? -1 : 1)));
       input.value = history[historyAt] ?? "";
     } else if (e.ctrlKey && e.key === "c" && input.selectionStart === input.selectionEnd) {
       e.preventDefault();
-      echoCommand(`${input.value}^C`);
+      if (claudeTurns < 0) echoCommand(`${input.value}^C`);
       input.value = "";
       historyAt = history.length;
       scrollDown();
@@ -453,7 +542,7 @@ function setup(panel: HTMLElement) {
 
   out.addEventListener("click", (e) => {
     const cmd = (e.target as Element).closest<HTMLElement>("[data-run]")?.dataset.run;
-    if (cmd) run(cmd).then(() => input.focus({ preventScroll: true }));
+    if (cmd && claudeTurns < 0) run(cmd).then(() => input.focus({ preventScroll: true }));
   });
 
   // Click anywhere in the terminal to type, unless you're selecting text.
