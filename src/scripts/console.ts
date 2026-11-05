@@ -629,10 +629,18 @@ function setup(panel: HTMLElement) {
       const covered = vv.scale > 1.01 ? 0 : Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       root.style.setProperty("--kb", `${Math.round(covered)}px`);
       root.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
-      if (covered && document.activeElement === input) scrollDown();
+      root.style.setProperty("--vvt", `${Math.round(vv.offsetTop)}px`);
+      // Typing with the keyboard up: the terminal takes the whole visible
+      // screen, like a terminal app (see .kb-open in Console.astro).
+      const typing = covered > 80 && document.activeElement === input;
+      root.classList.toggle("kb-open", typing);
+      if (typing) scrollDown();
     };
     vv.addEventListener("resize", fitKeyboard);
     vv.addEventListener("scroll", fitKeyboard);
+    input.addEventListener("focus", fitKeyboard);
+    // The keyboard is already on its way down; catch up once it's gone.
+    input.addEventListener("blur", () => setTimeout(fitKeyboard, 100));
     fitKeyboard();
   }
 
