@@ -30,6 +30,8 @@ const external = /^https?:/.test(href);
   class:list={["btn", `btn--${variant}`]}
   target={external ? "_blank" : undefined}
   rel={external ? "noopener noreferrer" : undefined}
+  data-track="cta_click"
+  data-track-label={label}
 >
   <span class="btn__face">
     <span class="btn__label">

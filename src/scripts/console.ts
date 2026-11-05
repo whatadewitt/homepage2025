@@ -8,6 +8,7 @@
 
 import { CONSOLE_KEY } from "../data/themes";
 import type { FsDir, FsPage } from "../lib/sitefs";
+import { track } from "./track";
 
 const root = document.documentElement;
 const panel = document.querySelector<HTMLElement>("[data-console]");
@@ -326,25 +327,32 @@ function setup(panel: HTMLElement) {
 
     sudo() {
       print("c-err", "visitor is not in the sudoers file. This incident will be reported.");
+      track("easter_egg", { name: "sudo" });
     },
 
     claude() {
       enterClaude();
+      track("easter_egg", { name: "claude" });
     },
 
     doom() {
       startDoom();
+      track("easter_egg", { name: "doom" });
     },
   };
 
-  async function run(raw: string) {
+  /** Run a command line, typed at the prompt or tapped in the output. */
+  async function run(raw: string, input: "typed" | "tapped" = "typed") {
     echoCommand(raw);
     const text = raw.trim();
     historyAt = history.length;
     if (text) {
       remember(text);
       const [name, ...args] = text.split(/\s+/);
-      if (!Object.hasOwn(commands, name)) {
+      // The command, never what follows it, and nothing typed that isn't one.
+      const known = Object.hasOwn(commands, name);
+      track("terminal_command", { command: known ? name : "unknown", input });
+      if (!known) {
         print("c-err", `command not found: ${name}`);
       } else {
         await loadFs();
@@ -486,6 +494,8 @@ function setup(panel: HTMLElement) {
   // out the game goes first, then the terminal slides back down.
   let doomOn = false;
   let game: HTMLIFrameElement | undefined;
+  /** When the game was added, for doom_end's seconds played. */
+  let doomSince = 0;
 
   /** Resolves once the terminal's height transition ends. */
   function resized() {
@@ -518,6 +528,7 @@ function setup(panel: HTMLElement) {
     game.title = "DOOM";
     game.src = "/doom/";
     game.addEventListener("load", () => game?.focus());
+    doomSince = performance.now();
     panel.append(game);
     panel.classList.add("is-playing");
   }
@@ -525,6 +536,12 @@ function setup(panel: HTMLElement) {
   function stopDoom(cls = "c-muted", message = "thanks for playing.") {
     if (!doomOn) return;
     doomOn = false;
+    if (game) {
+      track("doom_end", {
+        seconds: Math.round((performance.now() - doomSince) / 1000),
+        result: cls === "c-err" ? "error" : "quit",
+      });
+    }
     game?.remove();
     game = undefined;
     panel.classList.remove("is-playing");
@@ -553,6 +570,7 @@ function setup(panel: HTMLElement) {
   }
 
   function setOpen(open: boolean) {
+    if (open !== isOpen()) track(open ? "terminal_open" : "terminal_hide");
     if (!open) stopDoom();
     root.classList.add("console-anim");
     root.classList.toggle("console-open", open);
@@ -623,7 +641,7 @@ function setup(panel: HTMLElement) {
 
   out.addEventListener("click", (e) => {
     const cmd = (e.target as Element).closest<HTMLElement>("[data-run]")?.dataset.run;
-    if (cmd && claudeTurns < 0) run(cmd).then(() => input.focus({ preventScroll: true }));
+    if (cmd && claudeTurns < 0) run(cmd, "tapped").then(() => input.focus({ preventScroll: true }));
   });
 
   // Click anywhere in the terminal to type, unless you're selecting text.

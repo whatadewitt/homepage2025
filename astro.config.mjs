@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
-import partytown from '@astrojs/partytown';
 
 // Open external links in markdown (posts, talk notes, project write-ups) in a
 // new tab.
@@ -32,11 +31,4 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  integrations: [
-    partytown({
-      config: {
-        forward: ['dataLayer.push'],
-      },
-    }),
-  ],
 });

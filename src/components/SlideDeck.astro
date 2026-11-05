@@ -17,7 +17,7 @@ const src = (i: number, w: number) =>
 const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(", ");
 ---
 
-<div class="deck" data-deck>
+<div class="deck" data-deck data-deck-slug={slug}>
   <ol
     class="deck__track"
     tabindex="0"
@@ -57,7 +57,13 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
         </div>
       )
     }
-    <a href={deck.pdf} class="text-link" download>download pdf ↓</a>
+    <a
+      href={deck.pdf}
+      class="text-link"
+      download
+      data-track="slides_download"
+      data-track-talk={slug}
+    >download pdf ↓</a>
   </div>
 </div>
 
@@ -157,7 +163,10 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
 </style>
 
 <script>
+  import { track as trackEvent } from "../scripts/track";
+
   document.querySelectorAll<HTMLElement>("[data-deck]").forEach((deck) => {
+    const talk = deck.dataset.deckSlug ?? "";
     const track = deck.querySelector<HTMLElement>("[data-deck-track]")!;
     const slides = Array.from(track.children) as HTMLElement[];
     const prev = deck.querySelector<HTMLButtonElement>("[data-deck-prev]");
@@ -183,6 +192,22 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
       if (next) next.disabled = i === slides.length - 1;
     };
 
+    // Analytics: one slide_change per slide landed on (not every scroll
+    // frame), and deck_complete the first time the last slide comes up.
+    let reported = 0;
+    let completed = false;
+    let landing = 0;
+    const landed = () => {
+      const i = index();
+      if (i === reported) return;
+      reported = i;
+      trackEvent("slide_change", { talk, slide: i + 1 });
+      if (i === slides.length - 1 && !completed) {
+        completed = true;
+        trackEvent("deck_complete", { talk, slides: slides.length });
+      }
+    };
+
     // While a button or key scroll is underway, `heading` is where it's going,
     // so quick repeat presses keep counting from there, not from mid-scroll.
     let heading: number | null = null;
@@ -200,6 +225,9 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
     track.addEventListener(
       "scroll",
       () => {
+        // Settled for a moment: where it landed (scrollend isn't everywhere).
+        clearTimeout(landing);
+        landing = window.setTimeout(landed, 250);
         if (heading !== null) return;
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(() => show(index()));

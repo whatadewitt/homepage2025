@@ -25,14 +25,21 @@ const targets = [
     {
       targets.map((t) => (
         <li>
-          <a href={t.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${t.name}`}>
+          <a
+            href={t.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Share on ${t.name}`}
+            data-track="share"
+            data-track-network={t.label}
+          >
             {t.label}
           </a>
         </li>
       ))
     }
     <li>
-      <button type="button" data-copy-link>copy link</button>
+      <button type="button" data-copy-link data-track="share" data-track-network="copy">copy link</button>
       <span class="sr" role="status" data-copy-status></span>
     </li>
   </ul>

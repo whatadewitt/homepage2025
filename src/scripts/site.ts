@@ -9,6 +9,7 @@ import {
   TERM_KEY,
   INTRO_KEY,
 } from "../data/themes";
+import { track } from "./track";
 
 const root = document.documentElement;
 
@@ -79,6 +80,7 @@ panel?.addEventListener("click", (e) => {
   if (!option?.dataset.themeOption) return;
   applyTheme(option.dataset.themeOption);
   store(THEME_KEY, option.dataset.themeOption);
+  track("theme_change", { theme: option.dataset.themeOption });
   setMenuOpen(false);
   menuButton?.focus();
 });
@@ -138,6 +140,7 @@ termSwitch?.addEventListener("click", () => {
   }
   root.dataset.term = on ? "on" : "off";
   store(TERM_KEY, root.dataset.term);
+  track("terminal_mode", { state: root.dataset.term });
   syncTermSwitch();
 });
 
