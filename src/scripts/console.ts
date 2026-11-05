@@ -330,6 +330,10 @@ function setup(panel: HTMLElement) {
     claude() {
       enterClaude();
     },
+
+    doom() {
+      startDoom();
+    },
   };
 
   async function run(raw: string) {
@@ -475,6 +479,45 @@ function setup(panel: HTMLElement) {
     scrollDown();
   }
 
+  // --- doom: the real thing, in an iframe (pages/doom/index.astro) ---------
+
+  let game: HTMLIFrameElement | undefined;
+
+  function startDoom() {
+    if (!matchMedia("(pointer: fine)").matches) {
+      return void print("c-err", "doom: needs a keyboard and mouse. Try it on a computer.");
+    }
+    print("", "DOOM Shareware v1.9 · Chocolate Doom, compiled to WebAssembly");
+    print("c-muted", "WASD to move · space to fire · E to use · ` to quit");
+    game = document.createElement("iframe");
+    game.className = "console__game";
+    game.title = "DOOM";
+    game.src = "/doom/";
+    game.addEventListener("load", () => game?.focus());
+    panel.append(game);
+    panel.classList.add("is-doom");
+    title.textContent = "doom · ` to quit";
+  }
+
+  function stopDoom(cls = "c-muted", message = "thanks for playing.") {
+    if (!game) return;
+    game.remove();
+    game = undefined;
+    panel.classList.remove("is-doom");
+    syncPrompt();
+    print(cls, message);
+    save();
+    scrollDown();
+    if (isOpen()) input.focus({ preventScroll: true });
+  }
+
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin || !game || e.source !== game.contentWindow) return;
+    const { doom, text } = (e.data ?? {}) as { doom?: string; text?: string };
+    if (doom === "quit") stopDoom();
+    else if (doom === "error") stopDoom("c-err", `doom: ${text}`);
+  });
+
   // --- Open and close --------------------------------------------------------
 
   const isOpen = () => root.classList.contains("console-open");
@@ -485,6 +528,7 @@ function setup(panel: HTMLElement) {
   }
 
   function setOpen(open: boolean) {
+    if (!open) stopDoom();
     root.classList.add("console-anim");
     root.classList.toggle("console-open", open);
     launcher.setAttribute("aria-expanded", String(open));
@@ -560,6 +604,11 @@ function setup(panel: HTMLElement) {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
     if (root.dataset.term !== "on") return;
+    if (game) {
+      e.preventDefault();
+      stopDoom();
+      return;
+    }
     if (e.target === input) {
       if (input.value) return;
       e.preventDefault();

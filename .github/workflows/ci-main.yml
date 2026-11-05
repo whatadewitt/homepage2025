@@ -32,8 +32,9 @@ jobs:
           # --delete removes files from S3 that no longer exist locally. Other
           # apps deploy into this bucket under their own paths (light-it-up's
           # deploy-site.yml, /odds), so leave those alone; excluded paths are
-          # never deleted.
-          args: --delete --exclude 'light-it-up/*' --exclude 'odds/*'
+          # never deleted. doom1.wad is uploaded by hand and kept out of git
+          # (see src/pages/doom/index.astro).
+          args: --delete --exclude 'light-it-up/*' --exclude 'odds/*' --exclude 'doom/doom1.wad'
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -162,6 +162,23 @@
     text-indent: -2ch;
   }
 
+  /* doom takes the whole screen; the game is an iframe (pages/doom). */
+  .console.is-doom {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .console.is-doom .console__scroll {
+    display: none;
+  }
+
+  .console :global(.console__game) {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background: #000;
+  }
+
   .console__bar {
     display: flex;
     align-items: center;

@@ -22,3 +22,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Doom (see src/pages/doom/index.astro): the shareware WAD lives in the S3
+# bucket, not in git; the local engine build is for dev only.
+public/doom/doom1.wad
+public/doom/engine/
