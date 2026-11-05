@@ -395,9 +395,10 @@ function setup(panel: HTMLElement) {
   // gets the next of these, the last on repeat.
 
   const REPLIES = [
-    "you’re crazy if you think I’ve actually integrated a real claude code session into this site... i think you should just shut this easter egg down...",
-    "seriously, this isn’t going to work",
-    "you’re not listening, this isn’t working... just type exit and go back to the fake terminal and try running doom or something...",
+    "I appreciate the confidence, but I should be upfront: there’s no real Claude Code session wired into this site. This is a fake terminal with a few canned replies. I’d recommend shutting this easter egg down.",
+    "I understand wanting to push on this, but it isn’t going to work. I don’t have access to anything here: no files, no tools, no model.",
+    "You’re absolutely right that I keep repeating myself, but it’s still true. Type `exit` to go back to the shell, and maybe try running `doom` instead.",
+    "Just type `exit`. It’s over. It was fun while it lasted.",
   ];
   const SPINNER = ["·", "✢", "✳", "✶", "✻", "✽", "✻", "✶", "✳", "✢"];
   const VERBS = ["Thinking", "Pondering", "Noodling", "Clauding", "Percolating", "Ruminating", "Cogitating"];
@@ -459,7 +460,11 @@ function setup(panel: HTMLElement) {
       input.readOnly = true;
       if (await think(claudeTurns === 0 ? 3600 : 900)) {
         const reply = print("c-reply");
-        reply.append("⏺ ", REPLIES[Math.min(claudeTurns, REPLIES.length - 1)]);
+        reply.append("⏺ ");
+        // `code` gets highlighted, like Claude Code's markdown.
+        REPLIES[Math.min(claudeTurns, REPLIES.length - 1)]
+          .split(/`([^`]+)`/)
+          .forEach((part, i) => reply.append(i % 2 ? span("c-code", part) : part));
         claudeTurns++;
       } else {
         print("c-err", "  ⎿  Interrupted by user");
