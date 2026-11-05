@@ -129,6 +129,9 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  /* Slide rows bleed to the screen edges (SlideDeck); never scroll the page
+     sideways. clip, not hidden, so the sticky header still sticks. */
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   background: var(--bg);

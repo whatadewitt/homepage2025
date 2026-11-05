@@ -69,22 +69,32 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
 
 <style>
   .deck {
+    /* How far the row reaches past the column to each edge of the screen.
+       These match .wrap; the script swaps in measured values (they differ by
+       the scrollbar where scrollbars take up space). 100cqi is the column
+       (.entry is the container). */
+    --bleed-left: calc(max(0px, (100vw - 1120px) / 2) + clamp(16px, 5vw, 48px));
+    --bleed-right: calc(100vw - var(--bleed-left) - 100cqi);
     display: flex;
     flex-direction: column;
     gap: 12px;
     min-width: 0;
   }
 
+  /* The row runs edge to edge; slides start at the column and continue off
+     the screen. Only the row scrolls sideways (body clips x overflow). */
   .deck__track {
     /* Slides' offsetLeft is measured from the row (see the script). */
     position: relative;
     display: grid;
     grid-auto-flow: column;
-    /* The next slide peeks in; one slide alone fills the row. */
-    grid-auto-columns: calc(100% - 32px);
-    gap: 12px;
-    margin: 0;
-    padding: 0;
+    /* Column-wide slides; on narrow screens a bit less, so the next one
+       peeks in. */
+    grid-auto-columns: min(100cqi, 100vw - var(--bleed-left) - 48px);
+    gap: 16px;
+    margin: 0 calc(-1 * var(--bleed-right)) 0 calc(-1 * var(--bleed-left));
+    padding: 0 var(--bleed-right) 0 var(--bleed-left);
+    scroll-padding: 0 var(--bleed-right) 0 var(--bleed-left);
     list-style: none;
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -92,7 +102,6 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
     scroll-behavior: smooth;
     /* The counter shows position; a scrollbar would sit over the slides. */
     scrollbar-width: none;
-    border-radius: 8px;
   }
 
   .deck__track::-webkit-scrollbar {
@@ -100,12 +109,12 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
   }
 
   .deck__track:has(> :only-child) {
-    grid-auto-columns: 100%;
+    grid-auto-columns: 100cqi;
   }
 
   .deck__track:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 4px;
+    outline-offset: -2px;
   }
 
   .deck__slide {
@@ -174,12 +183,25 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
     const current = deck.querySelector<HTMLElement>("[data-deck-current]");
     if (slides.length < 2) return;
 
-    // The slide whose left edge is closest to the row's.
+    // The row bleeds to the screen edges: measure how far, exactly.
+    const fit = () => {
+      const r = deck.getBoundingClientRect();
+      deck.style.setProperty("--bleed-left", `${r.left}px`);
+      deck.style.setProperty("--bleed-right", `${document.documentElement.clientWidth - r.right}px`);
+    };
+    fit();
+    new ResizeObserver(fit).observe(document.documentElement);
+
+    // Where the row is scrolled to for slide i (the row's padding puts the
+    // first slide at the column, not at 0).
+    const at = (i: number) => slides[i].offsetLeft - slides[0].offsetLeft;
+
+    // The slide whose left edge is closest to the column's.
     const index = () => {
       const left = track.scrollLeft;
       let best = 0;
-      slides.forEach((s, i) => {
-        if (Math.abs(s.offsetLeft - left) < Math.abs(slides[best].offsetLeft - left)) best = i;
+      slides.forEach((_, i) => {
+        if (Math.abs(at(i) - left) < Math.abs(at(best) - left)) best = i;
       });
       // Scrolled to the end: the last slide may not reach the left edge.
       if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 2) best = slides.length - 1;
@@ -215,7 +237,7 @@ const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(
     const go = (i: number) => {
       heading = Math.max(0, Math.min(slides.length - 1, i));
       show(heading);
-      track.scrollTo({ left: slides[heading].offsetLeft });
+      track.scrollTo({ left: at(heading) });
       clearTimeout(settle);
       settle = window.setTimeout(() => (heading = null), 700);
     };
