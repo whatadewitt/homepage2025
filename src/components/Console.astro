@@ -1,30 +1,25 @@
 ---
-// The terminal docked along the bottom in full terminal mode: cd, ls, cat and
-// open over the site's pages. Behavior lives in scripts/console.ts; open state
-// is on <html> (.console-open), set before paint by BaseLayout.
+// The terminal docked along the bottom in terminal mode: cd, ls, cat and
+// open over the site's pages. Its title bar always shows; open raises the
+// rest. Behavior lives in scripts/console.ts; open state is on <html>
+// (.console-open), set before paint by BaseLayout.
 ---
 
-<button
-  type="button"
-  class="ctrl console-launch"
-  aria-controls="console"
-  aria-expanded="false"
-  data-console-launch
->
-  <span aria-hidden="true">&gt;_</span> terminal
-</button>
-
 <section id="console" class="console" aria-label="Terminal" data-console>
-  <div class="console__bar">
+  <div class="console__bar" data-console-bar>
     <span class="console__title" data-console-title>visitor@whatadewitt: ~</span>
-    <button type="button" class="console__btn" aria-label="Minimize terminal" data-console-min>
-      <span aria-hidden="true">_</span>
-    </button>
-    <button type="button" class="console__btn" aria-label="Close terminal" data-console-close>
-      <span aria-hidden="true">✕</span>
+    <button
+      type="button"
+      class="console__toggle"
+      aria-controls="console-body"
+      aria-expanded="false"
+      data-console-toggle
+    >
+      <span class="console__when-closed">open <span aria-hidden="true">↑</span></span>
+      <span class="console__when-open">hide <span aria-hidden="true">↓</span></span>
     </button>
   </div>
-  <div class="console__scroll" data-console-scroll>
+  <div id="console-body" class="console__scroll" data-console-scroll>
     <div class="console__out" role="log" aria-live="polite" data-console-out></div>
     <form class="console__line" data-console-form>
       <label for="console-input" class="c-prompt" data-console-prompt>
@@ -51,25 +46,17 @@
 <style>
   :global(:root) {
     --console-h: clamp(240px, 42svh, 480px);
+    --console-bar: 49px;
   }
 
-  /* Open terminal covers the bottom of the page; leave room to scroll past. */
+  /* The terminal covers the bottom of the page (just its bar when it's
+     down); leave room to scroll past. */
+  :global(html[data-term="on"] body) {
+    padding-bottom: var(--console-bar);
+  }
+
   :global(html.console-open[data-term="on"] body) {
     padding-bottom: var(--console-h);
-  }
-
-  .console-launch {
-    display: none;
-    position: fixed;
-    right: clamp(16px, 3vw, 24px);
-    bottom: clamp(16px, 3vw, 24px);
-    z-index: 30;
-    gap: 6px;
-    box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
-  }
-
-  :global(html[data-term="on"]:not(.console-open)) .console-launch {
-    display: inline-flex;
   }
 
   .console {
@@ -88,13 +75,18 @@
     transform: translateY(100%);
   }
 
-  :global(html.console-open[data-term="on"]) .console {
+  /* In terminal mode the bar peeks up from the bottom; open raises the rest. */
+  :global(html[data-term="on"]) .console {
     visibility: visible;
+    transform: translateY(calc(100% - var(--console-bar)));
+  }
+
+  :global(html.console-open[data-term="on"]) .console {
     transform: none;
   }
 
-  /* Slides only when opened or closed, not when a page loads with it open. */
-  /* Height changes when doom takes the screen (.is-doom). */
+  /* Slides only on a toggle, not when a page loads with it open. Height
+     changes when doom takes the screen (.is-doom). */
   .console {
     transition: height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
@@ -102,14 +94,15 @@
   :global(html.console-anim) .console {
     transition:
       transform 220ms ease,
-      visibility 0s 220ms,
+      visibility 0s,
       height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  :global(html.console-anim.console-open) .console {
+  /* Leaving terminal mode: stay visible until it has slid away. */
+  :global(html.console-anim[data-term="off"]) .console {
     transition:
       transform 220ms ease,
-      visibility 0s,
+      visibility 0s 220ms,
       height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
@@ -189,13 +182,21 @@
   }
 
   .console__bar {
+    flex: none;
+    box-sizing: border-box;
+    height: var(--console-bar);
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 4px 2px 16px;
+    gap: 8px;
+    padding: 0 6px 0 16px;
     border-bottom: 1px solid var(--line);
     color: var(--muted);
     font-size: 13px;
+  }
+
+  /* Down, the whole bar opens it. */
+  :global(html:not(.console-open)) .console__bar {
+    cursor: pointer;
   }
 
   .console__title {
@@ -205,20 +206,31 @@
     white-space: nowrap;
   }
 
-  .console__btn {
-    width: 40px;
-    height: 40px;
-    border: 0;
-    border-radius: 6px;
-    background: none;
-    color: var(--muted);
-    font: inherit;
+  .console__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 500 13px var(--font-mono);
     cursor: pointer;
   }
 
-  .console__btn:hover {
-    color: var(--ink);
-    background: var(--bg);
+  .console__toggle:hover {
+    border-color: var(--muted);
+  }
+
+  .console__when-open,
+  :global(html.console-open) .console__when-closed {
+    display: none;
+  }
+
+  :global(html.console-open) .console__when-open {
+    display: inline;
   }
 
   .console__scroll {

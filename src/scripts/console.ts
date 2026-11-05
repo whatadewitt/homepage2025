@@ -1,4 +1,4 @@
-// The docked terminal in full terminal mode: the site as folders to cd, ls,
+// The docked terminal in terminal mode: the site as folders to cd, ls,
 // cat and open. Every page is a folder: ~, ~/projects, ~/projects/rookie...,
 // and `open` goes to a folder's page and moves you into it. Scrollback and
 // history live in sessionStorage, so the terminal stays open, session intact,
@@ -16,7 +16,8 @@ if (panel) setup(panel);
 
 function setup(panel: HTMLElement) {
   const q = <T extends HTMLElement>(sel: string) => panel.querySelector<T>(sel)!;
-  const launcher = document.querySelector<HTMLButtonElement>("[data-console-launch]")!;
+  const bar = q("[data-console-bar]");
+  const toggle = q<HTMLButtonElement>("[data-console-toggle]");
   const title = q("[data-console-title]");
   const scroller = q("[data-console-scroll]");
   const out = q("[data-console-out]");
@@ -555,19 +556,25 @@ function setup(panel: HTMLElement) {
     if (!open) stopDoom();
     root.classList.add("console-anim");
     root.classList.toggle("console-open", open);
-    launcher.setAttribute("aria-expanded", String(open));
+    syncOpen();
     if (open) {
       loadFs();
       if (!out.childElementCount) welcome();
       scrollDown();
       input.focus({ preventScroll: true });
     } else if (panel.contains(document.activeElement)) {
-      launcher.focus();
+      toggle.focus();
     }
     save();
   }
 
-  /** Close for good: the next open starts a fresh screen (history stays). */
+  /** The toggle's state, and keep the hidden body out of the tab order. */
+  function syncOpen() {
+    toggle.setAttribute("aria-expanded", String(isOpen()));
+    scroller.inert = !isOpen();
+  }
+
+  /** exit: a fresh screen next time (history stays). */
   function close() {
     out.replaceChildren();
     setOpen(false);
@@ -575,9 +582,10 @@ function setup(panel: HTMLElement) {
 
   // --- Events ----------------------------------------------------------------
 
-  launcher.addEventListener("click", () => setOpen(true));
-  q("[data-console-min]").addEventListener("click", () => setOpen(false));
-  q("[data-console-close]").addEventListener("click", close);
+  toggle.addEventListener("click", () => setOpen(!isOpen()));
+  bar.addEventListener("click", (e) => {
+    if (!isOpen() && !(e.target as Element).closest("[data-console-toggle]")) setOpen(true);
+  });
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -665,10 +673,12 @@ function setup(panel: HTMLElement) {
     print("c-muted", `opening ${page}…`);
   }
 
-  // Turning on full terminal brings the terminal up, history and all.
+  // Turning on terminal mode brings the terminal up, history and all.
   new MutationObserver(() => {
-    if (root.dataset.term === "on") setOpen(true);
-    else if (panel.contains(document.activeElement)) {
+    root.classList.add("console-anim");
+    if (root.dataset.term === "on") return setOpen(true);
+    stopDoom();
+    if (panel.contains(document.activeElement)) {
       document.querySelector<HTMLElement>("[data-term-switch]")?.focus();
     }
   }).observe(root, { attributes: true, attributeFilter: ["data-term"] });
@@ -678,8 +688,8 @@ function setup(panel: HTMLElement) {
   if (saved.out) out.innerHTML = saved.out;
   logVisit();
   syncPrompt();
+  syncOpen();
   if (isOpen()) {
-    launcher.setAttribute("aria-expanded", "true");
     loadFs();
     scrollDown();
     if (saved.focus && root.dataset.term === "on") input.focus({ preventScroll: true });

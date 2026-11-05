@@ -109,7 +109,7 @@ menu?.addEventListener("focusout", (e) => {
   if (!menu.contains(e.relatedTarget as Node | null)) setMenuOpen(false);
 });
 
-// --- Full terminal -----------------------------------------------------------
+// --- Terminal mode -----------------------------------------------------------
 
 const termSwitch = document.querySelector<HTMLButtonElement>(
   "[data-term-switch]"
@@ -153,7 +153,7 @@ if (root.classList.contains("type-intro") && document.querySelector(".hero__name
   window.setTimeout(() => root.classList.remove("type-intro"), 2500);
 }
 
-// --- Full terminal: keep line breaks steady --------------------------------
+// --- Terminal mode: keep line breaks steady --------------------------------
 // Geist Mono is ~20% wider than Geist, so text rewraps when it flips. For each
 // weight, shrink the mono by the measured sans/mono width ratio (same size for
 // the same style everywhere), then give each split element a small

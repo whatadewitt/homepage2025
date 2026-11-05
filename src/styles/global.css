@@ -210,7 +210,7 @@ button:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
-   Full terminal: per-character font flip. Each .ch carries its own
+   Terminal mode: per-character font flip. Each .ch carries its own
    transition-delay; font-family is discrete, so with allow-discrete and a 0s
    duration it flips exactly at that delay.
    --------------------------------------------------------------------------- */
@@ -221,7 +221,7 @@ button:focus-visible {
 }
 
 /* Only when the switch is flipped (site.ts adds .term-anim): a page that
-   loads already in full terminal shouldn't animate into it, including when
+   loads already in terminal mode shouldn't animate into it, including when
    site.ts sets --mono-size / --mono-ls after the first paint. */
 .term-anim .ch,
 .term-anim .tf {
@@ -230,7 +230,7 @@ button:focus-visible {
   transition-behavior: allow-discrete;
 }
 
-/* Mono is wider than Geist, so in full terminal each split element shrinks
+/* Mono is wider than Geist, so in terminal mode each split element shrinks
    its mono a little (--mono-size) and nudges letter-spacing (--mono-ls) to
    keep roughly the same width and line breaks. site.ts measures both. */
 .term-anim .ch {
