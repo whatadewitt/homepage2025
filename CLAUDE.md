@@ -108,6 +108,7 @@ The site includes Google Tag Manager integration that activates when a GTM ID is
 - Uses Astro's `import.meta.env.PUBLIC_GTM_ID` for environment variable
 - Includes both the main GTM script (in `<head>`) and noscript fallback (in `<body>`)
 - The `PUBLIC_` prefix makes the variable accessible in client-side code
+- Custom events go through `track()` in `src/scripts/track.ts`; the event list and the GTM/GA4 setup are in `docs/analytics.md`
 
 ### Security Notes
 - Never commit your actual `.env` file (it's in .gitignore)

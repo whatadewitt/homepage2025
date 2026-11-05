@@ -1,0 +1,69 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import EntryLayout from "../../layouts/EntryLayout.astro";
+import { getProjects } from "../../lib/entries";
+import { getPosts } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props as { project: CollectionEntry<"projects"> };
+const { Content } = await render(project);
+const d = project.data;
+const post = d.post ? getPosts().find((p) => p.slug === d.post) : undefined;
+
+// The live site is the main action; failing that, the related Dew Drop.
+const primary = d.link
+  ? { href: d.link, label: "Visit the site", cmd: "open site" }
+  : d.post
+    ? { href: `/dew-drops/${d.post}`, label: "Read the drop", cmd: "open dew-drop" }
+    : undefined;
+
+const links = [
+  ...(d.link && d.post ? [{ href: `/dew-drops/${d.post}`, label: "read the drop →" }] : []),
+  ...(d.source ? [{ href: d.source, label: "source ↗" }] : []),
+];
+---
+
+<EntryLayout
+  pageTitle={`${d.title} | Projects | Luke DeWitt`}
+  title={d.title}
+  summary={d.summary}
+  path={`~/projects/${project.id}`}
+  meta={[d.tag]}
+  primary={primary}
+  links={links}
+  image={d.image}
+  imageAlt={d.imageAlt}
+  imagePosition={d.imagePosition}
+  slides={d.slides}
+  video={d.video}
+  bodyPrompt="cat README.md"
+  hasBody={!!project.body?.trim()}
+  back={{ href: "/projects", label: "all projects" }}
+>
+  <Content />
+  {
+    /* Write-ups point "below" for the full story, so it ends with the drop. */
+    post && (
+      <p class="drop-link">
+        <a href={`/dew-drops/${post.slug}`}>
+          Read “{post.frontmatter.title}” on Dew Drops →
+        </a>
+      </p>
+    )
+  }
+</EntryLayout>
+
+<style>
+  .drop-link {
+    margin-top: 2rem;
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+</style>

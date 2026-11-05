@@ -1,0 +1,82 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Split from "../../components/Split.astro";
+import Cursor from "../../components/Cursor.astro";
+import SpeakingBlock from "../../components/SpeakingBlock.astro";
+import { getTalks, isoDate } from "../../lib/entries";
+
+const talks = await getTalks();
+---
+
+<BaseLayout
+  title="Speaking | Luke DeWitt"
+  description="Talks by Luke DeWitt on developer experience, team culture and anything techy, with slides and notes."
+>
+  <header class="page-head">
+    <p class="prompt-line">
+      <span class="prompt">$</span> ls <span class="t-arg">~/talks</span>
+    </p>
+    <h1 class="page-title"><Split text="Speaking" start={0} /><Cursor /></h1>
+    <p class="page-lede">
+      <Split
+        text="Slides, notes and an overview from some of the talks I’ve given."
+        start={40}
+      />
+    </p>
+  </header>
+
+  {
+    talks.length === 0 ? (
+      <p class="empty">
+        <span class="prompt">$</span> ls: no talks posted yet. Check back soon.
+      </p>
+    ) : (
+      <ul class="rows">
+        {talks.map((talk, i) => {
+          const start = Math.min(80 + i * 40, 400);
+          return (
+            <li>
+              <a href={`/speaking/${talk.id}`} class="row">
+                <time class="row__label date" datetime={isoDate(talk.data.date)}>
+                  {isoDate(talk.data.date)}
+                </time>
+                <span class="row__body">
+                  <span class="talk__event">
+                    {talk.data.event}
+                    {talk.data.location && ` · ${talk.data.location}`}
+                  </span>
+                  <span class="row__title">
+                    <Split text={talk.data.title} start={start} />
+                  </span>
+                  <span class="row__blurb">
+                    <Split text={talk.data.summary} start={start + 30} />
+                  </span>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+
+  <SpeakingBlock id="book" start={300} />
+</BaseLayout>
+
+<style>
+  .empty {
+    margin: 0;
+    padding: 24px 0;
+    border-top: 1px solid var(--row-line);
+    border-bottom: 1px solid var(--row-line);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .talk__event {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--magenta);
+  }
+</style>

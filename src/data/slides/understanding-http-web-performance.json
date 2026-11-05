@@ -1,0 +1,41 @@
+{
+  "width": 1440,
+  "height": 1080,
+  "widths": [
+    720,
+    1440
+  ],
+  "pdf": "/talks/understanding-http-web-performance.pdf",
+  "alts": [
+    "Collide Halifax October 22, 2015 Understanding HTTP & Web Performance",
+    "Welcome.",
+    "Who are these guys? Luke DeWitt Web Team Lead Mike Rudolph DEFINITELY NOT A COP",
+    "",
+    "Immediacy of Now",
+    "",
+    "",
+    "",
+    "",
+    "Immediacy of Now",
+    "‣ Jakob Nielsen Response Times ‣ “Instantaneous Reaction” ‣ 1/10th of a second ‣ “Uninterrupted Flow of Thought” ‣ 1 second ‣ “Users Attention” ‣ 10 seconds ‣ 1993 study ‣ source: http://www.nngroup.com/articles/response-times-3-important-limits/",
+    "SQUIRREL!!!",
+    "Show of hands…",
+    "‣ KISSMetrics What a slow site means… ‣ 47% of users expect your site to load in 2 seconds or less ‣ 40% of users abandon a site at 3 seconds ‣ 7% reduction in conversions for every additional second of load time ‣ sources: https://blog.kissmetrics.com/loading-time/, https://blog.kissmetrics.com/speed-is-a-killer/",
+    "Let’s Do It!",
+    "Critical Path CSS",
+    "",
+    "Image Optimizations",
+    "SVGs - Scalable Vector Graphics",
+    "Image Compression 1.7MB 305.9kb -82%",
+    "Responsive Images",
+    "Font Caching",
+    "Javascript Optimizations",
+    "Render Blocking Loaded in <head> Loaded before </body>",
+    "Minify / Concatenate ‣ Fewer requests ‣ Less bandwidth",
+    "Content Delivery Network",
+    "DNS Prefetch",
+    "Wrapping up…",
+    "Thank You @whatadewitt @mikerudolph_",
+    "Questions"
+  ]
+}

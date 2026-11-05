@@ -1,0 +1,142 @@
+---
+// The game behind the terminal's `doom` command. The terminal shows this page
+// in an iframe, so quitting (removing the frame) stops the game loop, sound
+// and memory in one go, and the engine's globals never touch the site.
+//
+// Engine: Chocolate Doom compiled to WebAssembly (whatadewitt/doom-wasm, a
+// fork of cloudflare/doom-wasm, GPL-2.0), served by jsDelivr. The shareware
+// WAD sits in the site's bucket at /doom/doom1.wad; it's kept out of git, and
+// the deploy's sync excludes it. For local dev, put the built engine in
+// public/doom/engine/ and the WAD at public/doom/doom1.wad (both ignored).
+const engine = import.meta.env.DEV
+  ? "/doom/engine/"
+  : "https://cdn.jsdelivr.net/gh/whatadewitt/doom-wasm@1.0.0/build/";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>DOOM</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+        color: #b5b5b5;
+        font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+      }
+
+      /* No border or padding on the canvas: SDL maps mouse coords to it. */
+      canvas {
+        display: block;
+        width: min(100vw, calc(100vh * 4 / 3));
+        height: auto;
+        aspect-ratio: 4 / 3;
+        outline: 0;
+        image-rendering: pixelated;
+      }
+
+      #status {
+        position: fixed;
+        inset: auto 0 50%;
+        text-align: center;
+        white-space: pre;
+      }
+
+      #status:empty {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+    <p id="status">loading doom…</p>
+
+    <script is:inline define:vars={{ engine }}>
+      var statusEl = document.getElementById("status");
+      var canvas = document.getElementById("canvas");
+
+      // Talk to the terminal (scripts/console.ts) in the parent page.
+      function tell(type, text) {
+        if (window.parent !== window) {
+          window.parent.postMessage({ doom: type, text: text }, location.origin);
+        }
+      }
+
+      function fail(text) {
+        statusEl.textContent = text;
+        tell("error", text);
+      }
+
+      // ` quits back to the shell (Doom keeps esc for its own menu).
+      window.addEventListener(
+        "keydown",
+        function (e) {
+          if (e.key === "`") {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            tell("quit");
+          }
+        },
+        true
+      );
+
+      window.Module = {
+        canvas: canvas,
+        noInitialRun: true,
+        locateFile: function (path) {
+          return engine + path;
+        },
+        preRun: function () {
+          Module.FS.createPreloadedFile("", "doom1.wad", "/doom/doom1.wad", true, false, null, function () {
+            fail("couldn’t load doom1.wad");
+          });
+          Module.FS.createPreloadedFile("", "default.cfg", engine + "default.cfg", true, true);
+        },
+        onRuntimeInitialized: function () {
+          statusEl.textContent = "";
+          canvas.focus();
+          tell("ready");
+          // The glue exposes callMain globally unless it's exported on Module.
+          var main = Module.callMain || window.callMain;
+          main(["-iwad", "doom1.wad", "-window", "-nogui", "-nomusic", "-config", "default.cfg"]);
+        },
+        // Quit Game from Doom's own menu.
+        onExit: function () {
+          tell("quit");
+        },
+        onAbort: function () {
+          fail("doom crashed");
+        },
+        print: function (text) {
+          console.log(text);
+        },
+        printErr: function (text) {
+          console.warn(text);
+        },
+      };
+
+      var script = document.createElement("script");
+      script.src = engine + "websockets-doom.js";
+      script.onerror = function () {
+        fail("couldn’t load the engine");
+      };
+      document.body.appendChild(script);
+
+      // Clicking back in after the terminal had focus.
+      document.addEventListener("pointerdown", function () {
+        canvas.focus();
+      });
+    </script>
+  </body>
+</html>

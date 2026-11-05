@@ -1,16 +1,285 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Avatar from "../components/Avatar.astro";
+import Button from "../components/Button.astro";
+import Split from "../components/Split.astro";
+import Cursor from "../components/Cursor.astro";
+import SpeakingBlock from "../components/SpeakingBlock.astro";
+import { getPosts } from "../lib/posts";
+import { getProjects, getTalks, isoDate } from "../lib/entries";
+
+const bio =
+  "Based in Halifax, Nova Scotia. I’m forever a builder, working as a director, trying to understand how to do both in this ever-changing landscape in which I live.";
+
+// Each flag label takes a different color from the theme's ANSI palette.
+const flags = [
+  { flag: "--family", color: "cyan", title: "Dad of four, husband of one", rest: "— my wife wanted to make sure I had this first." },
+  { flag: "--builder", color: "green", title: "Builder of things", rest: "— countless side projects of varied usefulness." },
+  { flag: "--jays", color: "blue", title: "Baseball diehard", rest: "— the Blue Jays own an unreasonable and frankly indefensible share of my attention." },
+  { flag: "--speaker", color: "yellow", title: "Conference speaker", rest: "— developer experience, team culture, or anything techy." },
+  { flag: "--coach", color: "magenta", title: "Always coaching", rest: "— and figuring out how the lessons from each avenue help improve the other." },
+];
+
+// The top few by `order`; "all projects →" has the rest.
+const projects = (await getProjects()).slice(0, 4);
+const talks = (await getTalks()).slice(0, 3);
+const drops = getPosts().slice(0, 3);
 ---
 
-<BaseLayout title="Luke DeWitt | Developer" layout="homepage">
-  <h2
-    class="mt-2 text-xl sm:text-2xl font-medium text-violet-600 dark:text-violet-400"
-  >
-    Director &bull; Developer &bull; Dad
-  </h2>
+<BaseLayout title="Luke DeWitt | Developer" heroHead>
+  <section class="hero" aria-labelledby="hero-name">
+    <div class="hero__text">
+      <p class="prompt-line"><span class="prompt">$</span> whoami</p>
+      <h1 id="hero-name" class="hero__name">
+        <Split text="Luke DeWitt" start={0} typed /><Cursor />
+      </h1>
+      <p class="hero__roles">
+        director <span aria-hidden="true">•</span> developer <span aria-hidden="true">•</span> dad
+      </p>
+      <p class="hero__bio"><Split text={bio} start={40} /></p>
+      <div class="hero__ctas">
+        <Button href="#speaking" label="Book me to speak" cmd="book --speaker luke" start={60} arrow />
+        <Button href="/dew-drops" label="Dew Drops" cmd="cd ~/dew-drops" variant="secondary" start={100} />
+      </div>
+    </div>
+    <div class="hero__head">
+      <Avatar size="hero" />
+    </div>
+  </section>
 
-  <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
-    Based in Halifax, Nova Scotia. I'm a big "team" guy — if I'm going to lead,
-    I'd rather do it with my hands on the keyboard than over someone's shoulder.
-  </p>
+  <section class="section flags" aria-labelledby="always">
+    <h2 id="always" class="prompt-line">
+      <span class="prompt">$</span> off_the_keyboard <span class="t-op">&amp;&amp;</span> always_on
+    </h2>
+    <ul class="rows">
+      {
+        flags.map((f, i) => (
+          <li class="row">
+            <p class="row__label" style={`color: var(--${f.color})`}>{f.flag}</p>
+            <p class="row__body flags__text">
+              <span>
+                <strong>
+                  <Split text={f.title} start={80 + i * 40} />
+                </strong>{" "}
+                <span class="flags__rest">
+                  <Split text={f.rest} start={120 + i * 40} />
+                </span>
+              </span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="projects" class="section" aria-labelledby="projects-heading">
+    <div class="section__head">
+      <h2 id="projects-heading" class="prompt-line">
+        <span class="prompt">$</span> ls <span class="t-arg">~/projects</span>
+      </h2>
+      <a href="/projects" class="text-link">all projects →</a>
+    </div>
+    <div class="cards">
+      {
+        projects.map((p, i) => (
+          <a href={`/projects/${p.id}`} class="card">
+            <span class="card__tag">{p.data.tag}</span>
+            <span class="card__title">
+              <Split text={p.data.title} start={200 + i * 30} />
+            </span>
+            <span class="card__desc">
+              <Split text={p.data.blurb} start={230 + i * 30} />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section id="drops" class="section" aria-labelledby="drops-heading">
+    <div class="section__head">
+      <h2 id="drops-heading" class="prompt-line">
+        <span class="prompt">$</span> tail <span class="t-flag">-3</span> <span class="t-arg">dew-drops</span>
+      </h2>
+      <a href="/dew-drops" class="text-link">all drops →</a>
+    </div>
+    <p class="drops__tagline">Condensed thoughts, occasionally spilling out.</p>
+    <ul class="rows">
+      {
+        drops.map((d, i) => (
+          <li>
+            <a href={`/dew-drops/${d.slug}`} class="row">
+              <time class="row__label date" datetime={d.frontmatter.date}>
+                {d.frontmatter.date}
+              </time>
+              <span class="row__body">
+                <span class="row__title">
+                  <Split text={d.frontmatter.title} start={280 + i * 30} />
+                </span>
+                {d.frontmatter.excerpt && (
+                  <span class="row__blurb">
+                    <Split text={d.frontmatter.excerpt} start={310 + i * 30} />
+                  </span>
+                )}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <SpeakingBlock id="speaking" start={360}>
+    {
+      talks.length > 0 && (
+        <div class="talks">
+          <ul>
+            {talks.map((t) => (
+              <li>
+                <a href={`/speaking/${t.id}`}>
+                  <span class="date">{isoDate(t.data.date).slice(0, 4)}</span>{" "}
+                  {/* Event names often end in the year; don't say it twice. */}
+                  {t.data.event.replace(/\s+\d{4}$/, "")} · {t.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a href="/speaking" class="text-link">all talks →</a>
+        </div>
+      )
+    }
+  </SpeakingBlock>
 </BaseLayout>
+
+<style>
+  .hero {
+    padding: clamp(40px, 6vw, 72px) 0 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Below the side-by-side layout the head lives only in the header (the
+     header shows it whenever the hero head isn't on screen). */
+  .hero__head {
+    display: none;
+  }
+
+  .hero__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  /* Desktop: the head sits beside the text instead of above it. */
+  @media (min-width: 960px) {
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 48px;
+    }
+
+    .hero__head {
+      display: block;
+    }
+  }
+
+  .hero__name {
+    margin: 0;
+    /* Mono is wider; a min-height keeps the page from jumping as it rewraps. */
+    min-height: 0.92em;
+    font-size: clamp(46px, 7.5vw, 104px);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* Type-in intro (first homepage view per session): each character stays
+     out of layout until its --t, so the cursor follows the last one typed.
+     Browsers that can't animate display just show the name. */
+  :global(.type-intro) .hero__name :global(.ch) {
+    animation: type-in 1ms steps(1) var(--t, 0ms) backwards;
+  }
+
+  @keyframes type-in {
+    from {
+      display: none;
+    }
+  }
+
+  .hero__roles {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--ink-soft);
+    word-spacing: 0.25em;
+  }
+
+  .hero__roles span {
+    color: var(--accent);
+  }
+
+  .hero__bio {
+    margin: 0;
+    max-width: 640px;
+    min-height: 4.5em;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+  }
+
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 12px;
+  }
+
+  .flags {
+    border-top: 1px solid var(--line);
+  }
+
+  .flags__text {
+    font-size: 19px;
+    line-height: 1.5;
+  }
+
+  .flags__text strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .flags__rest {
+    color: var(--muted);
+  }
+
+  .drops__tagline {
+    margin: -16px 0 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .talks ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+
+  .talks li a {
+    display: inline-block;
+    padding: 6px 0;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .talks li a:hover {
+    color: var(--accent);
+  }
+</style>

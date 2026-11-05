@@ -1,0 +1,75 @@
+---
+// "Book me to speak" block, on the homepage and /speaking.
+import Button from "./Button.astro";
+import Split from "./Split.astro";
+
+export interface Props {
+  id?: string;
+  /** Split-text start offset for the full-terminal flip. */
+  start?: number;
+}
+
+const { id, start = 360 } = Astro.props;
+const LINKEDIN = "https://www.linkedin.com/in/lukedewitt/";
+---
+
+<section id={id} class="speaking" aria-labelledby={`${id ?? "book"}-heading`}>
+  <p class="prompt-line">
+    <span class="prompt">$</span> book <span class="t-flag">--speaker</span>
+    <span class="t-arg">luke</span>
+  </p>
+  <h2 id={`${id ?? "book"}-heading`} class="speaking__title">
+    <Split text="Planning an event? I’ll bring the talk." start={start} />
+  </h2>
+  <p class="speaking__sub">
+    <Split
+      text="Developer experience, team culture, or anything techy."
+      start={start + 40}
+    />
+  </p>
+  <slot />
+  <div>
+    <Button
+      href={LINKEDIN}
+      label="Get in touch"
+      cmd="open linkedin"
+      start={start + 120}
+      arrow
+    />
+  </div>
+</section>
+
+<style>
+  .speaking {
+    margin: 48px 0 96px;
+    padding: clamp(28px, 6vw, 64px);
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .speaking .prompt-line {
+    font-size: 14px;
+  }
+
+  .speaking__title {
+    margin: 0;
+    max-width: 820px;
+    font-size: clamp(34px, 5vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .speaking__sub {
+    margin: 0;
+    max-width: 620px;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+</style>

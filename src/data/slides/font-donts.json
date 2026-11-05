@@ -1,0 +1,32 @@
+{
+  "width": 1440,
+  "height": 810,
+  "widths": [
+    720,
+    1440
+  ],
+  "pdf": "/talks/font-donts.pdf",
+  "alts": [
+    "FONT DON’TS TECH SHARE",
+    "FONTS MATTER For most of us, at some level, a user is looking at text on your page, application, whatever…",
+    "FONTS MATTER “Type is how we ‘hear’ what we read” - Jason Pamental",
+    "●Embedding Fonts Properly ●Using Fonts Incorrectly ●Font-Smoothing ●Variable Fonts OUTLINE",
+    "●Avoid @import for embedding fonts ○ Blocking EMBEDS",
+    "●font face declarations .class { EMBEDS",
+    "●font face declarations .class { .bold { font-weight: bold; EMBEDS",
+    "●font face declarations .class { .bold { font-weight: bold; EMBEDS BAD!!",
+    "font-family: \"Open Sans Bold\"; src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); .class { .bold { font-family: \"Open Sans Bold\"; font-weight: bold; EMBEDS",
+    "font-family: \"Open Sans Bold\"; src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); .class { .bold { font-family: \"Open Sans Bold\"; font-weight: bold; EMBEDS BAD!!",
+    "font-family: \"Open Sans Bold\"; src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); .class { .bold { font-family: \"Open Sans Bold\"; font-weight: bold; EMBEDS BAD!! BAD!!",
+    "src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); font-weight: bold; .class { .bold { font-weight: bold; EMBEDS",
+    "src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); font-weight: bold; .class { .bold { font-weight: bold; EMBEDS",
+    "src: url(\"/fonts/OpenSans-Bold-webfont.woff2\") format(\"woff2\"), url(\"/fonts/OpenSans-Bold-webfont.woff\") format(\"woff\"); font-weight: bold; .class { .bold { font-weight: bold; EMBEDS codepen",
+    "●You ever have the thing where you put a webfont on your site and it just doesn’t look right? ●You may be having an anti-aliasing issue. ●https://www.html5rocks.com/en/tutorials/internals/a ntialiasing-101/ ●There’s a simple ﬁx! FONT-SMOOTHING",
+    "html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; FONT-SMOOTHING",
+    "html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; FONT-SMOOTHING",
+    "html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; FONT-SMOOTHING codepen",
+    "VARIABLE FONTS ●Variable Fonts are the next evolution of fonts ●In short, you can access multiple variations of the font from within a single font embed ○ Less bandwidth = faster sites ●Many of the free Google Fonts options are now available as variable ●Variable fonts workshop in January of 2020 with Jason Pamental",
+    "VARIABLE FONTS ●Google Example ○ https://fonts.google.com/specimen/Lora?vfonly=true#standard-sty les ●Blog Post ○ https://drive.google.com/ﬁle/d/1R9hkXmElr--OlMxOhJwJrZWuH0 U6EehH/view?usp=sharing",
+    "QUESTIONS?"
+  ]
+}

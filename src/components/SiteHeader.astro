@@ -1,0 +1,151 @@
+---
+import Avatar from "./Avatar.astro";
+import ThemeMenu from "./ThemeMenu.astro";
+import TermSwitch from "./TermSwitch.astro";
+
+const path = Astro.url.pathname;
+const links = [
+  { href: "/dew-drops", label: "dew-drops", current: path.startsWith("/dew-drops") },
+  { href: "/projects", label: "projects", current: path.startsWith("/projects") },
+  { href: "/speaking", label: "speaking", current: path.startsWith("/speaking") },
+];
+---
+
+<header class="site-header" data-site-header>
+  <div class="wrap site-header__inner">
+    <a href="/" class="wordmark">
+      <span class="navhead" aria-hidden="true"><Avatar size="nav" /></span>
+      luke<span class="wordmark__dot">.</span>dewitt
+    </a>
+    <nav aria-label="Main" class="site-nav">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={l.current ? "page" : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="site-controls">
+      <ThemeMenu />
+      <TermSwitch />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .site-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 12px;
+    padding-block: 12px;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin-right: auto;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .wordmark__dot {
+    color: var(--accent);
+  }
+
+  /* Collapsed until the hero head scrolls under the header (html.scrolled). */
+  .navhead {
+    display: inline-flex;
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      width 260ms ease,
+      margin-right 260ms ease,
+      opacity 200ms ease;
+  }
+
+  :global(.scrolled) .navhead {
+    width: 32px;
+    margin-right: 10px;
+    opacity: 1;
+  }
+
+  /* No hero head below the homepage's side-by-side breakpoint, so the nav
+     head always shows. Keep in step with .hero__head in pages/index.astro. */
+  @media (max-width: 959px) {
+    .navhead {
+      width: 32px;
+      margin-right: 10px;
+      opacity: 1;
+    }
+  }
+
+  .site-nav {
+    order: 3;
+    flex: 1 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+
+  .site-nav a {
+    padding: 12px 0;
+    color: var(--muted);
+    text-decoration: none;
+    text-underline-offset: 6px;
+  }
+
+  .site-nav a:hover,
+  .site-nav a[aria-current="page"] {
+    color: var(--ink);
+  }
+
+  .site-nav a[aria-current="page"] {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+
+  .site-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @media (min-width: 640px) {
+    .site-header__inner {
+      column-gap: 24px;
+    }
+
+    .wordmark {
+      font-size: 17px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .site-header__inner {
+      padding-block: 16px;
+    }
+
+    .site-nav {
+      order: 0;
+      flex: 0 1 auto;
+    }
+  }
+</style>

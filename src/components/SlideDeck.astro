@@ -1,0 +1,276 @@
+---
+// A talk's slides as a row of images you swipe (or arrow) through. Only the
+// row scrolls sideways, never the page. Images and alt text come from
+// scripts/talk-slides.py; the next slide peeks in so it reads as swipeable.
+import type { Deck } from "../lib/entries";
+
+export interface Props {
+  slug: string;
+  title: string;
+  deck: Deck;
+}
+
+const { slug, title, deck } = Astro.props;
+const count = deck.alts.length;
+const src = (i: number, w: number) =>
+  `/talks/${slug}/${String(i + 1).padStart(3, "0")}-${w}.webp`;
+const srcset = (i: number) => deck.widths.map((w) => `${src(i, w)} ${w}w`).join(", ");
+---
+
+<div class="deck" data-deck data-deck-slug={slug}>
+  <ol
+    class="deck__track"
+    tabindex="0"
+    aria-label={`Slides: ${title}`}
+    data-deck-track
+  >
+    {
+      deck.alts.map((alt, i) => (
+        <li class="deck__slide" aria-label={`${i + 1} of ${count}`}>
+          <img
+            src={src(i, deck.width)}
+            srcset={srcset(i)}
+            sizes="(min-width: 800px) 760px, 100vw"
+            width={deck.width}
+            height={deck.height}
+            alt={alt}
+            loading={i < 2 ? "eager" : "lazy"}
+            decoding="async"
+          />
+        </li>
+      ))
+    }
+  </ol>
+  <div class="deck__bar">
+    {
+      count > 1 && (
+        <div class="deck__nav">
+          <button type="button" class="ctrl" aria-label="Previous slide" data-deck-prev disabled>
+            ←
+          </button>
+          <span class="deck__count">
+            <span data-deck-current>1</span> / {count}
+          </span>
+          <button type="button" class="ctrl" aria-label="Next slide" data-deck-next>
+            →
+          </button>
+        </div>
+      )
+    }
+    <a
+      href={deck.pdf}
+      class="text-link"
+      download
+      data-track="slides_download"
+      data-track-talk={slug}
+    >download pdf ↓</a>
+  </div>
+</div>
+
+<style>
+  .deck {
+    /* How far the row reaches past the column to each edge of the screen.
+       These match .wrap; the script swaps in measured values (they differ by
+       the scrollbar where scrollbars take up space). 100cqi is the column
+       (.entry is the container). */
+    --bleed-left: calc(max(0px, (100vw - 1120px) / 2) + clamp(16px, 5vw, 48px));
+    --bleed-right: calc(100vw - var(--bleed-left) - 100cqi);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  /* The row runs edge to edge; slides start at the column and continue off
+     the screen. Only the row scrolls sideways (body clips x overflow). */
+  .deck__track {
+    /* Slides' offsetLeft is measured from the row (see the script). */
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    /* Column-wide slides; on narrow screens a bit less, so the next one
+       peeks in. */
+    grid-auto-columns: min(100cqi, 100vw - var(--bleed-left) - 48px);
+    gap: 16px;
+    margin: 0 calc(-1 * var(--bleed-right)) 0 calc(-1 * var(--bleed-left));
+    padding: 0 var(--bleed-right) 0 var(--bleed-left);
+    scroll-padding: 0 var(--bleed-right) 0 var(--bleed-left);
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* The counter shows position; a scrollbar would sit over the slides. */
+    scrollbar-width: none;
+  }
+
+  .deck__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .deck__track:has(> :only-child) {
+    grid-auto-columns: 100cqi;
+  }
+
+  .deck__track:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .deck__slide {
+    scroll-snap-align: start;
+  }
+
+  .deck__slide img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .deck__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
+  .deck__nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .deck__nav .ctrl {
+    justify-content: center;
+    padding: 0;
+    font-size: 16px;
+  }
+
+  .deck__nav .ctrl:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .deck__count {
+    min-width: 7ch;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .deck__track {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+
+<script>
+  import { track as trackEvent } from "../scripts/track";
+
+  document.querySelectorAll<HTMLElement>("[data-deck]").forEach((deck) => {
+    const talk = deck.dataset.deckSlug ?? "";
+    const track = deck.querySelector<HTMLElement>("[data-deck-track]")!;
+    const slides = Array.from(track.children) as HTMLElement[];
+    const prev = deck.querySelector<HTMLButtonElement>("[data-deck-prev]");
+    const next = deck.querySelector<HTMLButtonElement>("[data-deck-next]");
+    const current = deck.querySelector<HTMLElement>("[data-deck-current]");
+    if (slides.length < 2) return;
+
+    // The row bleeds to the screen edges: measure how far, exactly.
+    const fit = () => {
+      const r = deck.getBoundingClientRect();
+      deck.style.setProperty("--bleed-left", `${r.left}px`);
+      deck.style.setProperty("--bleed-right", `${document.documentElement.clientWidth - r.right}px`);
+    };
+    fit();
+    new ResizeObserver(fit).observe(document.documentElement);
+
+    // Where the row is scrolled to for slide i (the row's padding puts the
+    // first slide at the column, not at 0).
+    const at = (i: number) => slides[i].offsetLeft - slides[0].offsetLeft;
+
+    // The slide whose left edge is closest to the column's.
+    const index = () => {
+      const left = track.scrollLeft;
+      let best = 0;
+      slides.forEach((_, i) => {
+        if (Math.abs(at(i) - left) < Math.abs(at(best) - left)) best = i;
+      });
+      // Scrolled to the end: the last slide may not reach the left edge.
+      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 2) best = slides.length - 1;
+      return best;
+    };
+
+    const show = (i: number) => {
+      if (current) current.textContent = String(i + 1);
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === slides.length - 1;
+    };
+
+    // Analytics: one slide_change per slide landed on (not every scroll
+    // frame), and deck_complete the first time the last slide comes up.
+    let reported = 0;
+    let completed = false;
+    let landing = 0;
+    const landed = () => {
+      const i = index();
+      if (i === reported) return;
+      reported = i;
+      trackEvent("slide_change", { talk, slide: i + 1 });
+      if (i === slides.length - 1 && !completed) {
+        completed = true;
+        trackEvent("deck_complete", { talk, slides: slides.length });
+      }
+    };
+
+    // While a button or key scroll is underway, `heading` is where it's going,
+    // so quick repeat presses keep counting from there, not from mid-scroll.
+    let heading: number | null = null;
+    let settle = 0;
+    const go = (i: number) => {
+      heading = Math.max(0, Math.min(slides.length - 1, i));
+      show(heading);
+      track.scrollTo({ left: at(heading) });
+      clearTimeout(settle);
+      settle = window.setTimeout(() => (heading = null), 700);
+    };
+    const from = () => heading ?? index();
+
+    let frame = 0;
+    track.addEventListener(
+      "scroll",
+      () => {
+        // Settled for a moment: where it landed (scrollend isn't everywhere).
+        clearTimeout(landing);
+        landing = window.setTimeout(landed, 250);
+        if (heading !== null) return;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => show(index()));
+      },
+      { passive: true }
+    );
+    track.addEventListener("scrollend", () => {
+      heading = null;
+      show(index());
+    });
+    // A swipe or drag takes over from any button scroll.
+    track.addEventListener("pointerdown", () => (heading = null));
+
+    prev?.addEventListener("click", () => go(from() - 1));
+    next?.addEventListener("click", () => go(from() + 1));
+    track.addEventListener("keydown", (e) => {
+      const step = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      const jump = { Home: 0, End: slides.length - 1 }[e.key];
+      if (step === undefined && jump === undefined) return;
+      e.preventDefault();
+      go(jump ?? from() + step!);
+    });
+  });
+</script>

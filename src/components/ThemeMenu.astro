@@ -1,0 +1,143 @@
+---
+import { THEMES } from "../data/themes";
+
+// Show the active theme's name without waiting for JS: render every name and
+// let CSS pick the one matching html[data-theme].
+const nameRules = THEMES.map(
+  (t) => `html:not([data-theme="${t.id}"]) [data-theme-name="${t.id}"]{display:none}`
+).join("");
+---
+
+<div class="theme-menu" data-theme-menu>
+  <button
+    type="button"
+    class="ctrl theme-menu__button"
+    aria-expanded="false"
+    aria-controls="theme-menu-panel"
+    data-theme-menu-button
+  >
+    <span class="swatch swatch--current" aria-hidden="true"></span>
+    <span class="hide-sm">theme: </span><span class="hide-sm">
+      {THEMES.map((t) => <span data-theme-name={t.id}>{t.name}</span>)}
+    </span>
+    <svg
+      aria-hidden="true"
+      class="chevron"
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg
+    >
+  </button>
+  <div
+    id="theme-menu-panel"
+    class="theme-menu__panel"
+    role="group"
+    aria-label="Theme"
+    hidden
+  >
+    {
+      THEMES.map((t) => (
+        <button
+          type="button"
+          class="theme-menu__option"
+          aria-pressed="false"
+          data-theme-option={t.id}
+        >
+          <span
+            class="swatch"
+            aria-hidden="true"
+            style={`background:${t.accent};box-shadow:0 0 0 2px ${t.bg}, 0 0 0 3px var(--line)`}
+          />
+          {t.name}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style is:inline set:html={nameRules}></style>
+
+<style>
+  .theme-menu {
+    position: relative;
+  }
+
+  .theme-menu__button {
+    gap: 8px;
+  }
+
+  .chevron {
+    transition: transform 150ms;
+  }
+
+  .theme-menu__button[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .swatch {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .swatch--current {
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--line);
+  }
+
+  .theme-menu__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 20;
+    min-width: 220px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.4);
+  }
+
+  .theme-menu__panel[hidden] {
+    display: none;
+  }
+
+  .theme-menu__option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font: 500 13px var(--font-mono);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .theme-menu__option:hover {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .theme-menu__option[aria-pressed="true"] {
+    color: var(--ink);
+  }
+
+  .theme-menu__option[aria-pressed="true"]::after {
+    content: "✓";
+    margin-left: auto;
+    color: var(--accent);
+  }
+</style>

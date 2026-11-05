@@ -1,30 +1,77 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import HomeButton from "../components/HomeButton.astro";
+import AnimatedSVG from "../components/AnimatedSVG2.astro";
+import Button from "../components/Button.astro";
+import Split from "../components/Split.astro";
+import Cursor from "../components/Cursor.astro";
 ---
 
-<BaseLayout title="Luke DeWitt | 404" layout="homepage" xEyes={true}>
-  <HomeButton slot="controls" />
-
-  <h2
-    class="mt-2 text-xl sm:text-2xl font-medium text-violet-600 dark:text-violet-400"
-  >
-    Oops!
-  </h2>
-
-  <p class="mt-6 text-stone-600 dark:text-indigo-200 leading-relaxed">
-    Not sure how or why you got here, but it ain&apos;t right!
-  </p>
-
-  <div class="mt-8">
-    <div class="flex flex-wrap gap-4">
-      <a
-        href="/"
-        class="flex items-center gap-3 bg-stone-200/50 dark:bg-gray-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/50 transition-all duration-300 px-4 py-2 rounded-lg text-stone-700 dark:text-white"
-      >
-        <i class="fa-solid fa-home mr-2"></i>
-        <span>Home</span>
-      </a>
+<BaseLayout title="Luke DeWitt | 404">
+  <section class="lost">
+    <div class="lost__text">
+      <p class="prompt-line">
+        <span class="prompt">$</span> cd <span class="t-arg" data-missing-path>that-page</span>
+      </p>
+      <p class="lost__error">bash: cd: no such file or directory</p>
+      <h1 class="page-title"><Split text="Oops!" start={0} /><Cursor /></h1>
+      <p class="page-lede">
+        <Split
+          text="Not sure how or why you got here, but it ain’t right!"
+          start={40}
+        />
+      </p>
+      <div>
+        <Button href="/" label="Take me home" cmd="cd ~" start={80} arrow />
+      </div>
     </div>
-  </div>
+    <div class="lost__art" aria-hidden="true">
+      <AnimatedSVG xEyes={true} />
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  // The 404 page is prebuilt, so show the path that was actually requested.
+  const path = document.querySelector("[data-missing-path]");
+  if (path) path.textContent = window.location.pathname;
+</script>
+
+<style>
+  .lost {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: 32px;
+    padding: clamp(40px, 7vw, 88px) 0 96px;
+  }
+
+  .lost__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .lost__error {
+    margin: -8px 0 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .lost__art {
+    display: flex;
+    justify-content: center;
+  }
+
+  .lost__art :global(.luke-character) {
+    max-width: 280px;
+    height: auto;
+  }
+
+  @media (min-width: 900px) {
+    .lost {
+      grid-template-columns: 1fr 320px;
+    }
+  }
+</style>

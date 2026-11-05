@@ -1,0 +1,257 @@
+---
+// Detail page shared by talks and projects: overview, links, media (video,
+// slides, image) and the markdown body as notes.
+import BaseLayout from "./BaseLayout.astro";
+import Button from "../components/Button.astro";
+import Split from "../components/Split.astro";
+import Cursor from "../components/Cursor.astro";
+import SlideDeck from "../components/SlideDeck.astro";
+import { slidesEmbed, videoEmbed, type Deck } from "../lib/entries";
+
+export interface Props {
+  pageTitle: string;
+  title: string;
+  summary: string;
+  /** Shown as `$ cd <path>` above the title; the page's folder in the terminal. */
+  path: string;
+  /** Mono details above the title, e.g. event, date, location. */
+  meta: string[];
+  primary?: { href: string; label: string; cmd: string };
+  links: { href: string; label: string }[];
+  image?: string;
+  imageAlt?: string;
+  imagePosition?: string;
+  slides?: string;
+  /** Slide images to swipe through; used instead of `slides` when present. */
+  deck?: { slug: string; data: Deck };
+  video?: string;
+  /** Prompt above the body, e.g. "cat notes.md". */
+  bodyPrompt: string;
+  hasBody: boolean;
+  back: { href: string; label: string };
+}
+
+const {
+  pageTitle,
+  title,
+  summary,
+  path,
+  meta,
+  primary,
+  links,
+  image,
+  imageAlt,
+  imagePosition,
+  slides,
+  deck,
+  video,
+  bodyPrompt,
+  hasBody,
+  back,
+} = Astro.props;
+
+const videoSrc = video ? videoEmbed(video) : null;
+const slidesSrc = !deck && slides ? slidesEmbed(slides) : null;
+const allLinks = [
+  ...links,
+  // Decks and embedded slides carry their own download; link only the rest.
+  ...(slides && !deck && !slidesSrc ? [{ href: slides, label: "slides ↗" }] : []),
+  ...(video && !videoSrc ? [{ href: video, label: "video ↗" }] : []),
+];
+---
+
+<BaseLayout title={pageTitle} description={summary} ogImage={image}>
+  <article class="entry">
+    <header class="page-head">
+      <p class="prompt-line">
+        <span class="prompt">$</span> cd <span class="t-arg">{path}</span>
+      </p>
+      {
+        meta.length > 0 && (
+          <p class="entry__meta">
+            {meta.map((m, i) => (
+              <span class:list={{ date: i === 0 }}>{m}</span>
+            ))}
+          </p>
+        )
+      }
+      <h1 class="entry__title"><Split text={title} start={0} /><Cursor /></h1>
+      <p class="page-lede"><Split text={summary} start={60} /></p>
+      {
+        (primary || allLinks.length > 0) && (
+          <div class="entry__actions">
+            {primary && (
+              <Button
+                href={primary.href}
+                label={primary.label}
+                cmd={primary.cmd}
+                start={120}
+                arrow
+              />
+            )}
+            {allLinks.map((l) => {
+              const newTab = /^https?:/.test(l.href) || l.href.endsWith(".pdf");
+              return (
+                <a
+                  href={l.href}
+                  class="text-link"
+                  target={newTab ? "_blank" : undefined}
+                  rel={newTab ? "noopener noreferrer" : undefined}
+                >
+                  {l.label}
+                </a>
+              );
+            })}
+          </div>
+        )
+      }
+    </header>
+
+    {
+      videoSrc ? (
+        <div class="entry__frame">
+          <iframe
+            src={videoSrc}
+            title={`Video: ${title}`}
+            loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        </div>
+      ) : (
+        image && (
+          <img
+            class="entry__image"
+            src={image}
+            alt={imageAlt ?? ""}
+            style={imagePosition && `object-position: ${imagePosition}`}
+          />
+        )
+      )
+    }
+
+    {
+      deck && (
+        <section class="entry__section" aria-label="Slides">
+          <p class="prompt-line">
+            <span class="prompt">$</span> open <span class="t-arg">slides</span>
+          </p>
+          <SlideDeck slug={deck.slug} title={title} deck={deck.data} />
+        </section>
+      )
+    }
+
+    {
+      slidesSrc && (
+        <section class="entry__section" aria-label="Slides">
+          <p class="prompt-line">
+            <span class="prompt">$</span> open <span class="t-arg">slides</span>
+          </p>
+          <div class="entry__frame entry__frame--slides">
+            <iframe src={slidesSrc} title={`Slides: ${title}`} loading="lazy" allowfullscreen />
+          </div>
+        </section>
+      )
+    }
+
+    {
+      hasBody && (
+        <section class="entry__section">
+          <p class="prompt-line">
+            <span class="prompt">$</span> {bodyPrompt.split(" ")[0]}{" "}
+            <span class="t-arg">{bodyPrompt.split(" ").slice(1).join(" ")}</span>
+          </p>
+          <div class="prose">
+            <slot />
+          </div>
+        </section>
+      )
+    }
+
+    <footer class="entry__foot">
+      <a href={back.href} class="text-link">← {back.label}</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .entry {
+    max-width: 760px;
+    padding-bottom: 96px;
+    /* Lets .entry__image size against the column's width (cqi). */
+    container-type: inline-size;
+  }
+
+  .entry__meta {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .entry__title {
+    margin: 0;
+    font-size: clamp(34px, 5.5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    font-weight: 700;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .entry__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    padding-top: 8px;
+  }
+
+  .entry__image {
+    display: block;
+    width: 100%;
+    /* No taller than 16:9: wide images keep their shape, square or tall ones
+       crop to a banner (aim the crop with imagePosition). */
+    max-height: min(420px, 56.25cqi);
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+
+  .entry__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .entry__frame--slides {
+    aspect-ratio: 4 / 3;
+  }
+
+  .entry__frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .entry__section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 48px;
+  }
+
+  .entry__foot {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+</style>
