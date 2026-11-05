@@ -429,6 +429,8 @@ function setup(panel: HTMLElement) {
 
   function enterClaude() {
     setClaude(true);
+    // A fresh screen, like the real thing taking over the terminal.
+    out.replaceChildren();
     const box = print("c-banner");
     const head = document.createElement("p");
     head.append(span("c-star", "✻"), " Welcome to ", span("c-title", "Claude Code"), "!");
