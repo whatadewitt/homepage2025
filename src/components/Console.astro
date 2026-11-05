@@ -36,6 +36,14 @@
         data-console-input
       />
     </form>
+    <div class="console__keys" aria-label="Shortcut keys" data-console-keys>
+      <button type="button" data-key="tab">tab</button>
+      <button type="button" data-key="up" aria-label="Previous command">↑</button>
+      <button type="button" data-key="down" aria-label="Next command">↓</button>
+      <button type="button" data-cmd="ls">ls</button>
+      <button type="button" data-cmd="cd ..">cd ..</button>
+      <button type="button" data-cmd="help">help</button>
+    </div>
   </div>
 </section>
 
@@ -63,7 +71,11 @@
     position: fixed;
     inset: auto 0 0;
     z-index: 30;
-    height: var(--console-h);
+    /* Phones: the script sets --kb (how much the on-screen keyboard covers)
+       and --vvh (the height left visible), so the terminal sits above the
+       keyboard and fits beside it. */
+    bottom: var(--kb, 0px);
+    height: min(var(--console-h), var(--vvh, 100dvh) - 56px);
     display: flex;
     flex-direction: column;
     background: var(--surface);
@@ -243,14 +255,17 @@
     cursor: text;
   }
 
+  /* A long prompt (deep in a page's folder, on a phone) pushes the input
+     onto its own line rather than squeezing it to nothing. */
   .console__line {
     display: flex;
-    gap: 1ch;
+    flex-wrap: wrap;
+    gap: 0 1ch;
   }
 
   .console__input {
-    flex: 1;
-    min-width: 0;
+    flex: 1 0 12ch;
+    min-width: 12ch;
     padding: 0;
     border: 0;
     outline: 0;
@@ -356,5 +371,36 @@
     .console__input {
       font-size: 16px;
     }
+  }
+
+  /* Touch screens have no tab, arrows or quick way to type a command: a row
+     of keys under the prompt, like phone terminal apps. */
+  .console__keys {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  @media (pointer: coarse) {
+    .console__keys {
+      display: flex;
+    }
+  }
+
+  .console.is-claude .console__keys {
+    display: none;
+  }
+
+  .console__keys button {
+    min-width: 40px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 500 14px var(--font-mono);
+    cursor: pointer;
   }
 </style>

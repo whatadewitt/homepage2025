@@ -514,7 +514,7 @@ function setup(panel: HTMLElement) {
 
   async function startDoom() {
     if (!matchMedia("(pointer: fine)").matches) {
-      return void print("c-err", "doom: needs a keyboard and mouse. Try it on a computer.");
+      return void print("c-err", "doom: no keyboard detected. The demons will wait. Try again on a computer.");
     }
     doomOn = true;
     print("", "DOOM Shareware v1.9 · Chocolate Doom, compiled to WebAssembly");
@@ -600,6 +600,42 @@ function setup(panel: HTMLElement) {
 
   // --- Events ----------------------------------------------------------------
 
+  /** ↑/↓ through history: -1 is older, 1 newer (past the newest: blank). */
+  function stepHistory(delta: number) {
+    historyAt = Math.max(0, Math.min(history.length, historyAt + delta));
+    input.value = history[historyAt] ?? "";
+  }
+
+  // Touch shortcut keys. pointerdown keeps focus in the input, so the phone's
+  // keyboard stays up while you tap them.
+  const keys = q("[data-console-keys]");
+  keys.addEventListener("pointerdown", (e) => e.preventDefault());
+  keys.addEventListener("click", (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>("button");
+    if (!b || interrupt) return;
+    if (b.dataset.key === "tab") loadFs().then(complete);
+    else if (b.dataset.key === "up") stepHistory(-1);
+    else if (b.dataset.key === "down") stepHistory(1);
+    else if (b.dataset.cmd) run(b.dataset.cmd, "tapped");
+  });
+
+  // Phones: keep the terminal above the on-screen keyboard. The visual
+  // viewport is what's left visible; whatever it doesn't cover at the bottom
+  // of the layout viewport is the keyboard.
+  const vv = window.visualViewport;
+  if (vv) {
+    const fitKeyboard = () => {
+      // Pinch-zoom shrinks the visual viewport too; that isn't a keyboard.
+      const covered = vv.scale > 1.01 ? 0 : Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      root.style.setProperty("--kb", `${Math.round(covered)}px`);
+      root.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
+      if (covered && document.activeElement === input) scrollDown();
+    };
+    vv.addEventListener("resize", fitKeyboard);
+    vv.addEventListener("scroll", fitKeyboard);
+    fitKeyboard();
+  }
+
   toggle.addEventListener("click", () => setOpen(!isOpen()));
   bar.addEventListener("click", (e) => {
     if (!isOpen() && !(e.target as Element).closest("[data-console-toggle]")) setOpen(true);
@@ -622,8 +658,7 @@ function setup(panel: HTMLElement) {
       if (claudeTurns < 0) loadFs().then(complete);
     } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
-      historyAt = Math.max(0, Math.min(history.length, historyAt + (e.key === "ArrowUp" ? -1 : 1)));
-      input.value = history[historyAt] ?? "";
+      stepHistory(e.key === "ArrowUp" ? -1 : 1);
     } else if (e.ctrlKey && e.key === "c" && input.selectionStart === input.selectionEnd) {
       e.preventDefault();
       if (claudeTurns < 0) echoCommand(`${input.value}^C`);
