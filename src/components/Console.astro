@@ -94,19 +94,27 @@
   }
 
   /* Slides only when opened or closed, not when a page loads with it open. */
+  /* Height changes when doom takes the screen (.is-doom). */
+  .console {
+    transition: height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
   :global(html.console-anim) .console {
     transition:
       transform 220ms ease,
-      visibility 0s 220ms;
+      visibility 0s 220ms,
+      height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   :global(html.console-anim.console-open) .console {
     transition:
       transform 220ms ease,
-      visibility 0s;
+      visibility 0s,
+      height 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .console,
     :global(html.console-anim) .console {
       transition: none;
     }
@@ -162,13 +170,14 @@
     text-indent: -2ch;
   }
 
-  /* doom takes the whole screen; the game is an iframe (pages/doom). */
+  /* doom: the terminal grows to the whole screen (.is-doom), then the game,
+     an iframe (pages/doom), replaces the scrollback (.is-playing). */
   .console.is-doom {
     height: 100vh;
     height: 100dvh;
   }
 
-  .console.is-doom .console__scroll {
+  .console.is-playing .console__scroll {
     display: none;
   }
 

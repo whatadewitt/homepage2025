@@ -481,33 +481,57 @@ function setup(panel: HTMLElement) {
 
   // --- doom: the real thing, in an iframe (pages/doom/index.astro) ---------
 
+  // The terminal grows to full screen first, then the game loads; on the way
+  // out the game goes first, then the terminal slides back down.
+  let doomOn = false;
   let game: HTMLIFrameElement | undefined;
 
-  function startDoom() {
+  /** Resolves once the terminal's height transition ends. */
+  function resized() {
+    return new Promise<void>((done) => {
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return done();
+      const end = (e?: TransitionEvent) => {
+        if (e && (e.target !== panel || e.propertyName !== "height")) return;
+        panel.removeEventListener("transitionend", end);
+        clearTimeout(fallback);
+        done();
+      };
+      const fallback = setTimeout(end, 600);
+      panel.addEventListener("transitionend", end);
+    });
+  }
+
+  async function startDoom() {
     if (!matchMedia("(pointer: fine)").matches) {
       return void print("c-err", "doom: needs a keyboard and mouse. Try it on a computer.");
     }
+    doomOn = true;
     print("", "DOOM Shareware v1.9 · Chocolate Doom, compiled to WebAssembly");
     print("c-muted", "WASD to move · space to fire · E to use · ` to quit");
+    title.textContent = "doom · ` to quit";
+    panel.classList.add("is-doom");
+    await resized();
+    if (!doomOn) return; // quit while it was growing
     game = document.createElement("iframe");
     game.className = "console__game";
     game.title = "DOOM";
     game.src = "/doom/";
     game.addEventListener("load", () => game?.focus());
     panel.append(game);
-    panel.classList.add("is-doom");
-    title.textContent = "doom · ` to quit";
+    panel.classList.add("is-playing");
   }
 
   function stopDoom(cls = "c-muted", message = "thanks for playing.") {
-    if (!game) return;
-    game.remove();
+    if (!doomOn) return;
+    doomOn = false;
+    game?.remove();
     game = undefined;
-    panel.classList.remove("is-doom");
+    panel.classList.remove("is-playing");
     syncPrompt();
     print(cls, message);
     save();
     scrollDown();
+    panel.classList.remove("is-doom");
     if (isOpen()) input.focus({ preventScroll: true });
   }
 
@@ -604,7 +628,7 @@ function setup(panel: HTMLElement) {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
     if (root.dataset.term !== "on") return;
-    if (game) {
+    if (doomOn) {
       e.preventDefault();
       stopDoom();
       return;
