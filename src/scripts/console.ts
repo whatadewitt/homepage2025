@@ -111,12 +111,15 @@ function setup(panel: HTMLElement) {
   }
 
   interface Node {
-    /** The folder, from ~ (README.md's is its page). */
+    /** The folder, from ~ (a file's is its page). */
     parts: string[];
     dir?: FsDir;
     page?: FsPage;
-    readme?: boolean;
+    file?: string;
   }
+
+  /** The files in a page's folder. */
+  const filesIn = (page: FsPage) => (page.notes ? ["README.md", "notes.md"] : ["README.md"]);
 
   function resolve(arg: string): Node | null {
     const parts = /^[~/]/.test(arg) ? [] : [...cwd];
@@ -133,7 +136,7 @@ function setup(panel: HTMLElement) {
     if (!page) return null;
     const node = { parts: [dir.name, page.name], dir, page };
     if (parts.length === 2) return node;
-    return parts[2] === "README.md" ? { ...node, readme: true } : null;
+    return filesIn(page).includes(parts[2]) ? { ...node, file: parts[2] } : null;
   }
 
   /** The shortest way to write a folder from where you are. */
@@ -190,8 +193,8 @@ function setup(panel: HTMLElement) {
     return b;
   }
 
-  function readmeButton(parts: string[]) {
-    const b = runButton(`cat ~/${parts.join("/")}/README.md`, "README.md");
+  function fileButton(parts: string[], file: string) {
+    const b = runButton(`cat ~/${parts.join("/")}/${file}`, file);
     b.className = "c-file";
     return b;
   }
@@ -213,7 +216,7 @@ function setup(panel: HTMLElement) {
   const HELP: [string, string][] = [
     ["ls [path]", "list what’s here (-l for titles)"],
     ["cd <path>", "move into a folder (.., ~)"],
-    ["cat README.md", "read a page’s summary"],
+    ["cat <file>", "read a file (README.md, notes.md)"],
     ["open <path>", "go to a folder’s page (open . for this one)"],
     ["pwd", "where am I?"],
     ["history", "what you’ve typed"],
@@ -234,9 +237,13 @@ function setup(panel: HTMLElement) {
       const node = resolve(target);
       if (!node) return void print("c-err", `ls: ${target}: No such file or directory`);
       const grid = print(long ? "c-long" : "c-ls");
-      if (node.page) {
-        grid.append(readmeButton(node.parts));
-        if (long) grid.append(span("c-muted", node.page.title));
+      if (node.file) {
+        grid.append(fileButton(node.parts, node.file));
+      } else if (node.page) {
+        for (const file of filesIn(node.page)) {
+          grid.append(fileButton(node.parts, file));
+          if (long) grid.append(span("c-muted", file === "notes.md" ? "notes" : node.page.title));
+        }
       } else if (node.dir) {
         for (const p of node.dir.pages) {
           grid.append(dirButton([node.dir.name, p.name]));
@@ -253,7 +260,7 @@ function setup(panel: HTMLElement) {
     cd([target = "~"]) {
       const node = resolve(target);
       if (!node) return void print("c-err", `cd: no such file or directory: ${target}`);
-      if (node.readme) return void print("c-err", `cd: not a directory: ${target}`);
+      if (node.file) return void print("c-err", `cd: not a directory: ${target}`);
       cwd = node.parts;
       syncPrompt();
     },
@@ -262,11 +269,16 @@ function setup(panel: HTMLElement) {
       if (!target) return void print("c-err", "usage: cat <file>");
       const node = resolve(target);
       if (!node) return void print("c-err", `cat: ${target}: No such file or directory`);
-      if (!node.readme) return void print("c-err", `cat: ${target}: Is a directory`);
+      if (!node.file) return void print("c-err", `cat: ${target}: Is a directory`);
       const p = node.page!;
-      print("c-title", p.title);
-      print("c-meta", p.meta);
-      if (p.summary) print("", p.summary);
+      if (node.file === "notes.md") {
+        print("", p.notes);
+      } else {
+        print("c-title", p.title);
+        print("c-meta", p.meta);
+        if (p.summary) print("", p.summary);
+        if (p.readme) print("c-body", p.readme);
+      }
       print("c-muted").append("→ ", runButton(`open ~/${node.parts.join("/")}`));
     },
 
@@ -346,9 +358,9 @@ function setup(panel: HTMLElement) {
       const slash = word.lastIndexOf("/");
       base = word.slice(0, slash + 1);
       const node = resolve(base || ".");
-      if (!node || node.readme) return;
+      if (!node || node.file) return;
       options = node.page
-        ? ["README.md "]
+        ? filesIn(node.page).map((f) => `${f} `)
         : node.dir
           ? node.dir.pages.map((p) => `${p.name}/`)
           : fs.map((d) => `${d.name}/`);

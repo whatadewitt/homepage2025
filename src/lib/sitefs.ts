@@ -5,8 +5,9 @@
 import { getPosts, formatPostDate } from "./posts";
 import { getProjects, getTalks, isoDate } from "./entries";
 
-/** A post, project or talk: a folder in the terminal, with its summary as
- * README.md inside. */
+/** A post, project or talk: a folder in the terminal. README.md holds the
+ * summary (plus a project's write-up); a talk's notes are notes.md, matching
+ * the prompts on their pages. */
 export interface FsPage {
   /** Slug. */
   name: string;
@@ -15,12 +16,22 @@ export interface FsPage {
   /** Date, tag or event: one short mono line. */
   meta: string;
   summary: string;
+  /** A project's write-up: the markdown under `$ cat README.md`. */
+  readme?: string;
+  /** A talk's notes: the markdown under `$ cat notes.md`. */
+  notes?: string;
 }
 
 export interface FsDir {
   name: string;
   href: string;
   pages: FsPage[];
+}
+
+/** Markdown as `cat` would print it, minus HTML comments (drafting notes). */
+function source(body: string | undefined) {
+  const text = (body ?? "").replace(/<!--[\s\S]*?-->/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  return text || undefined;
 }
 
 export async function siteFs(): Promise<FsDir[]> {
@@ -46,6 +57,7 @@ export async function siteFs(): Promise<FsDir[]> {
         title: p.data.title,
         meta: p.data.tag,
         summary: p.data.summary,
+        readme: source(p.body),
       })),
     },
     {
@@ -57,6 +69,7 @@ export async function siteFs(): Promise<FsDir[]> {
         title: t.data.title,
         meta: `${t.data.event} · ${isoDate(t.data.date)}`,
         summary: t.data.summary,
+        notes: source(t.body),
       })),
     },
   ];
